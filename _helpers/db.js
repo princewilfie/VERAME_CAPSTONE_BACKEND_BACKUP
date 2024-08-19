@@ -21,6 +21,11 @@ async function initialize() {
 
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE'});
     db.RefreshToken.belongsTo(db.Account);
+    
+
+    db.Campaign = require('../campaigns/campaign.model')(sequelize);
+    db.Account.hasMany(db.Campaign, { onDelete: 'CASCADE' });
+    db.Campaign.belongsTo(db.Account);
 
 
     await sequelize.sync();

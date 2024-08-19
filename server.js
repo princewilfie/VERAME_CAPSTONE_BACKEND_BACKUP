@@ -18,6 +18,8 @@ app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: 
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'));
+app.use('/campaigns', require('./campaigns/campaign.controller'));
+
 
 
 

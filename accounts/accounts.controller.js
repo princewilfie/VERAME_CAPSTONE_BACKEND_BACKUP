@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
+const multer = require('_middleware/multer-config'); // Assuming multer is configured correctly here
 const validateRequest = require('_middleware/validate-request');
 const authorize = require('_middleware/authorize');
 const Role = require('_helpers/role');
 const accountService = require('./account.service');
 
+// Route Definitions
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
-router.post('/register', registerSchema, register);
+router.post('/register', multer.single('acc_image'), registerSchema, register); // Updated to include image upload
 router.post('/verify-email', verifyEmailSchema, verifyEmail);
 router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
@@ -22,6 +24,7 @@ router.delete('/:id', authorize(), _delete);
 
 module.exports = router;
 
+// Function Definitions
 function authenticateSchema(req, res, next) {
     const schema = Joi.object({
         acc_email: Joi.string().required(),
@@ -35,8 +38,8 @@ function authenticate(req, res, next) {
     const ipAddress = req.ip;
 
     accountService.authenticate({ acc_email, acc_passwordHash, ipAddress })
-        .then(({refreshToken, ...account }) => {
-            setTokenCookie(res, refreshToken); 
+        .then(({ refreshToken, ...account }) => {
+            setTokenCookie(res, refreshToken);
             res.json(account);
         })
         .catch(next);
@@ -45,9 +48,9 @@ function authenticate(req, res, next) {
 function refreshToken(req, res, next) {
     const token = req.cookies.refreshToken;
     const ipAddress = req.ip;
-    accountService.refreshToken({ token, ipAddress }) 
-        .then(({refreshToken, ...account }) => {
-            setTokenCookie(res, refreshToken); 
+    accountService.refreshToken({ token, ipAddress })
+        .then(({ refreshToken, ...account }) => {
+            setTokenCookie(res, refreshToken);
             res.json(account);
         })
         .catch(next);
@@ -61,7 +64,8 @@ function revokeTokenSchema(req, res, next) {
 }
 
 function revokeToken(req, res, next) {
-    const { token, ipAddress } = req.body;
+    const { token } = req.body;
+    const ipAddress = req.ip;
     accountService.revokeToken({ token, ipAddress })
         .then(() => {
             res.json({ message: 'Token revoked' });
@@ -70,10 +74,9 @@ function revokeToken(req, res, next) {
 }
 
 function setTokenCookie(res, token) {
-    // create cookie with refresh token that expires in 7 days
     const cookieOptions = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7*24*60*60*1000 )
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     };
     res.cookie('refreshToken', token, cookieOptions);
 }
@@ -85,7 +88,7 @@ function registerSchema(req, res, next) {
         acc_firstname: Joi.string().required(),
         acc_lastname: Joi.string().required(),
         acc_pnumber: Joi.string().required(),
-        acc_image: Joi.string().uri().required(),
+        // Remove acc_image from validation here
         acc_totalpoints: Joi.number().required(),
         acc_role: Joi.string().required()
     });
@@ -93,7 +96,13 @@ function registerSchema(req, res, next) {
 }
 
 function register(req, res, next) {
-    accountService.register(req.body, req.get('origin'))
+    // Access file information from req.file
+    const { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role } = req.body;
+    const acc_image = req.file ? req.file.path : null; // Default to null if no image uploaded
+
+    const body = { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, acc_image };
+
+    accountService.register(body, req.get('origin'))
         .then(() => {
             res.json({ message: 'Registration successful, please check your email for verification instructions' });
         })

@@ -2,12 +2,12 @@ const { DataTypes } = require('sequelize');
 
 function model(sequelize) {
     const attributes = {
-        acc_email: { type: DataTypes.STRING, allowNull: false, unique:true },
+        acc_email: { type: DataTypes.STRING, allowNull: false, unique: true },
         acc_passwordHash: { type: DataTypes.STRING, allowNull: false },
         acc_firstname: { type: DataTypes.STRING, allowNull: false },
         acc_lastname: { type: DataTypes.STRING, allowNull: false },
         acc_pnumber: { type: DataTypes.STRING, allowNull: true },
-        acc_image: { type: DataTypes.STRING, allowNull: true },
+        acc_image: { type: DataTypes.STRING, allowNull: true, defaultValue: 'assets/default-image.png' }, // Set default image path
         acc_totalpoints: { type: DataTypes.STRING, allowNull: true },
         acc_acceptTerms: { type: DataTypes.BOOLEAN },
         acc_role: { type: DataTypes.STRING, allowNull: false },

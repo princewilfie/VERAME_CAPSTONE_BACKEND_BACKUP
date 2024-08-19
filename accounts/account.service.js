@@ -116,7 +116,6 @@ async function sendAlreadyRegisteredEmail(email, origin) {
     });
 }
 
-
 async function verifyEmail({ token }) {
     const account = await db.Account.findOne({ where: { acc_verificationToken: token } });
 
@@ -295,6 +294,6 @@ function sendPasswordResetEmail(account, origin) {
 }
 
 function basicDetails(account) {
-    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, created, updated } = account;
-    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, created, updated };
+    const { acc_id, acc_email, acc_role, acc_created, acc_updated, acc_verified } = account;
+    return { acc_id, acc_email, acc_role, acc_created, acc_updated, acc_verified };
 }
