@@ -7,14 +7,14 @@
         "database" : "juanbayan"
     },
     "secret": "6c32701b-3329-431e-b95f-5604da73e4fc",
-    "emailFrom": "info@node-speedyfyteam.info@gmail.com",
+    "emailFrom": "JuanBayan",
     "smtpOptions" : {
         "service": "Gmail",
         "host": "smtp.gmail.com", 
         "port": 587,
         "auth": {
-            "user": "speedyfyteam.info@gmail.com",
-            "pass": "dthtsjmtagolzrkp"
+            "user": "juanbayan.team@gmail.com",
+            "pass": "malldknijiwtyezr"
         }
     }
 } 
