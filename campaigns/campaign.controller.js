@@ -4,26 +4,54 @@ const multer = require('_middleware/multer-config');
 const validateRequest = require('_middleware/validate-request');
 const Joi = require('joi');
 const campaignService = require('./campaign.service');
+const authorize = require('_middleware/authorize');
 
 // Use multer for file uploads, with error handling
-router.post('/', multer.single('image'), (req, res, next) => {
+router.post('/', multer.single('Campaign_Image'), (req, res, next) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
     createSchema(req, res, next);
 }, create);
 
+// Get all approved campaigns
 router.get('/', getAll);
+
+// Get an approved campaign by ID
 router.get('/:id', getById);
+
+// Update a campaign, with file upload
 router.put('/:id', multer.single('image'), (req, res, next) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
     updateSchema(req, res, next);
 }, update);
-router.delete('/:id', _delete);
+
+// Delete a campaign
+router.delete('/:id', authorize('Admin'), _delete); // Only accessible by admin
+
+// Approve a campaign (only accessible by admin)
+router.put('/:id/approve', authorize('Admin'), approve);
+
+// Reject a campaign (only accessible by admin)
+router.put('/:id/reject', authorize('Admin'), reject);
 
 module.exports = router;
+
+// Function to approve a campaign
+function approve(req, res, next) {
+    campaignService.approve(req.params.id)
+        .then(campaign => res.json(campaign))
+        .catch(next);
+}
+
+// Function to reject a campaign
+function reject(req, res, next) {
+    campaignService.reject(req.params.id)
+        .then(campaign => res.json(campaign))
+        .catch(next);
+}
 
 function createSchema(req, res, next) {
     const schema = Joi.object({
@@ -36,6 +64,7 @@ function createSchema(req, res, next) {
         Campaign_Status: Joi.number().required(),
         Campaign_Category: Joi.number().required(),
         Campaign_Feedback: Joi.number().allow(null)
+    
     });
     validateRequest(req, next, schema);
 }
@@ -47,12 +76,14 @@ function create(req, res, next) {
         .catch(next);
 }
 
+// Function to get all approved campaigns
 function getAll(req, res, next) {
     campaignService.getAll()
         .then(campaigns => res.json(campaigns))
         .catch(next);
 }
 
+// Function to get a specific approved campaign by ID
 function getById(req, res, next) {
     campaignService.getById(req.params.id)
         .then(campaign => res.json(campaign))

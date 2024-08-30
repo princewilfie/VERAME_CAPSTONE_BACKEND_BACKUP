@@ -170,10 +170,10 @@ async function resetPassword({ token, acc_passwordHash }) {
     await account.save();
 }
 
-async function getAll() {
-    const accounts = await db.Account.findAll();
-    return accounts.map(x => basicDetails(x));
+function getAll() {
+    return db.Account.findAll();
 }
+
 
 async function getById(id) {
     const account = await getAccount(id);

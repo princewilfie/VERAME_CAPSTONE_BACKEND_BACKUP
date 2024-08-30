@@ -88,9 +88,9 @@ function registerSchema(req, res, next) {
         acc_firstname: Joi.string().required(),
         acc_lastname: Joi.string().required(),
         acc_pnumber: Joi.string().required(),
-        // Remove acc_image from validation here
-        acc_totalpoints: Joi.number().required(),
-        acc_role: Joi.string().required()
+        confirmPassword: Joi.string().valid(Joi.ref('acc_passwordHash')).required(),
+        acc_acceptTerms: Joi.boolean().valid(true).required()
+        
     });
     validateRequest(req, next, schema);
 }
@@ -193,8 +193,8 @@ function createSchema(req, res, next) {
         acc_lastname: Joi.string().required(),
         acc_passwordHash: Joi.string().min(6).required(),
         acc_pnumber: Joi.string().required(),
-        acc_totalpoints: Joi.number().required(),
-        acc_role: Joi.string().required()
+        confirmPassword: Joi.string().valid(Joi.ref('acc_passwordHash')).required(),
+        role: Joi.string().valid(Role.Admin, Role.User).required()
     });
     validateRequest(req, next, schema);
 }
