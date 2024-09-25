@@ -36,3 +36,15 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
 app.listen(port, () => console.log('Server listening on port ' + port));
+
+
+app.post('/logout', async (req, res) => {
+    try {
+        const token = req.body.token; // Get the token from the request body
+        const ipAddress = req.ip; // Get the user's IP address
+        await revokeToken({ token, ipAddress }); // Call the revokeToken function
+        res.status(200).send({ message: 'Logged out successfully' });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});

@@ -22,7 +22,22 @@ router.post('/', authorize(Role.Admin), createSchema, create);
 router.put('/:id', authorize(), updateSchema, update);
 router.delete('/:id', authorize(), _delete);
 
+router.post('/logout', authorize(), logout); // Add authorization if needed
+
+
 module.exports = router;
+
+
+function logout(req, res, next) {
+    const { token } = req.body; // Get the token from the request body
+    const ipAddress = req.ip; // Get the user's IP address
+
+    accountService.revokeToken({ token, ipAddress })
+        .then(() => {
+            res.json({ message: 'Logged out successfully' });
+        })
+        .catch(next);
+}
 
 // Function Definitions
 function authenticateSchema(req, res, next) {

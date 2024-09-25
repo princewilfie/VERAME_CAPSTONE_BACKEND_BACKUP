@@ -294,6 +294,6 @@ function sendPasswordResetEmail(account, origin) {
 }
 
 function basicDetails(account) {
-    const { acc_id, acc_email, acc_role, acc_created, acc_updated, acc_verified } = account;
-    return { acc_id, acc_email, acc_role, acc_created, acc_updated, acc_verified };
+    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified } = account;
+    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified };
 }
