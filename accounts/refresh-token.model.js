@@ -23,7 +23,7 @@ function model(sequelize) {
         timestamps: false // You can keep this if you want manual control over timestamps
     };
 
-    return sequelize.define('RefreshToken', attributes, options); // Capitalize for model name
+    return sequelize.define('refreshToken', attributes, options); // Capitalize for model name
 }
 
 module.exports = model;

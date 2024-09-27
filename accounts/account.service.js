@@ -50,6 +50,7 @@ async function refreshToken({ token, ipAddress }) {
     // Replace old refresh token with a new one and save
     const newRefreshToken = generateRefreshToken(account, ipAddress);
     refreshToken.revoked = Date.now();
+    refreshToken.revokedByIp = ipAddress;
     refreshToken.replacedByToken = newRefreshToken.token;
     await refreshToken.save();
     await newRefreshToken.save();
@@ -241,7 +242,7 @@ async function getRefreshToken(token) {
 
 function generateJwtToken(account) {
     // Create a JWT token containing the account ID
-    return jwt.sign({ sub: account.id, id: account.id }, config.secret, { expiresIn: '15m' });
+    return jwt.sign({ sub: account.id, id: account.id }, config.secret, { expiresIn: '58m' });
 }
 
 function generateRefreshToken(account, ipAddress) {
@@ -253,6 +254,7 @@ function generateRefreshToken(account, ipAddress) {
         createdByIp: ipAddress
     });
 }
+
 
 function sendVerificationEmail(account, origin) {
     let message;
