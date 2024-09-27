@@ -36,5 +36,12 @@ async function initialize() {
     db.Donation.belongsTo(db.Account); 
     db.Donation.belongsTo(db.Campaign); 
 
+
+    // Rewards
+    db.Reward = require('../rewards/reward.model')(sequelize);
+    db.Account.hasMany(db.Reward, { onDelete: 'CASCADE' });
+    db.Reward.belongsTo(db.Account);
+
+
     await sequelize.sync();
 }

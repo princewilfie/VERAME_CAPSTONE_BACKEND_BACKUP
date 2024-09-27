@@ -50,8 +50,15 @@ function authenticate(req, res, next) {
 
             res.json({ ...account, refreshToken }); // Return refresh token along with account details
         })
-        .catch(next);
+        .catch(err => {
+            // Catch the specific error and respond accordingly
+            if (err === 'Account not verified. Please check your email to verify your account.') {
+                return res.status(403).json({ message: err });
+            }
+            next(err); // For other errors, continue to the default error handler
+        });
 }
+
 
 
 

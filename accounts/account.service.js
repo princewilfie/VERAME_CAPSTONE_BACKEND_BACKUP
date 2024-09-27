@@ -25,8 +25,13 @@ module.exports = {
 async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
     const account = await db.Account.scope('withHash').findOne({ where: { acc_email } });
 
-    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))){ 
+    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))) { 
         throw 'Email or password is incorrect';
+    }
+
+    // Check if the account is verified
+    if (!account.acc_verified) {
+        throw 'Account not verified. Please check your email to verify your account.';
     }
 
     // Authentication successful
@@ -42,6 +47,7 @@ async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
         refreshToken: refreshToken.token
     };
 }
+
 
 async function refreshToken({ token, ipAddress }) {
     const refreshToken = await getRefreshToken(token);
