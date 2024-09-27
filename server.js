@@ -20,6 +20,7 @@ app.use('/accounts', require('./accounts/accounts.controller'));
 app.use('/campaigns', require('./campaigns/campaign.controller'));
 app.use('/donation', require('./donations/donation.controller'));
 app.use('/rewards', require('./rewards/reward.controller'));
+app.use('/events', require('./events/event.controller')); 
 
 
 
