@@ -62,8 +62,7 @@ function createSchema(req, res, next) {
         Campaign_Start: Joi.date().required(),
         Campaign_End: Joi.date().required(),
         Campaign_Status: Joi.number().required(),
-        Campaign_Category: Joi.number().required(),
-        Campaign_Feedback: Joi.number().allow(null)
+        Campaign_Category: Joi.string().required()
     
     });
     validateRequest(req, next, schema);
@@ -98,8 +97,7 @@ function updateSchema(req, res, next) {
         Campaign_Start: Joi.date().empty(''),
         Campaign_End: Joi.date().empty(''),
         Campaign_Status: Joi.number().empty(''),
-        Campaign_Category: Joi.number().empty(''),
-        Campaign_Feedback: Joi.number().empty('')
+        Campaign_Category: Joi.string().empty('')
     });
     validateRequest(req, next, schema);
 }

@@ -11,8 +11,7 @@ function model(sequelize) {
         Campaign_Start: { type: DataTypes.DATE, allowNull: false },
         Campaign_End: { type: DataTypes.DATE, allowNull: false },
         Campaign_Status: { type: DataTypes.INTEGER, allowNull: false },
-        Campaign_Category: { type: DataTypes.INTEGER, allowNull: false },
-        Campaign_Feedback: { type: DataTypes.INTEGER, allowNull: true },
+        Campaign_Category: { type: DataTypes.STRING, allowNull: false },
         Campaign_Image: { type: DataTypes.STRING, allowNull: true },
         Campaign_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
     };
