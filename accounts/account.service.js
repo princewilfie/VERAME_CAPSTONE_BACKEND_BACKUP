@@ -29,6 +29,9 @@ async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
         throw 'Email or password is incorrect';
     }
 
+    if (account.acc_status === 'Inactive') {
+        throw 'Your account is disabled. Please contact the administrator.';
+    }
     // Authentication successful
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
@@ -294,6 +297,6 @@ function sendPasswordResetEmail(account, origin) {
 }
 
 function basicDetails(account) {
-    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified } = account;
-    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified };
+    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status } = account;
+    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status };
 }

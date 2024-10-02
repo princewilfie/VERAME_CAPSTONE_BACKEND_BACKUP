@@ -29,8 +29,8 @@ module.exports = router;
 
 
 function logout(req, res, next) {
-    const { token } = req.body; // Get the token from the request body
-    const ipAddress = req.ip; // Get the user's IP address
+    const { token } = req.body; 
+    const ipAddress = req.ip;
 
     accountService.revokeToken({ token, ipAddress })
         .then(() => {
@@ -209,7 +209,7 @@ function createSchema(req, res, next) {
         acc_passwordHash: Joi.string().min(6).required(),
         acc_pnumber: Joi.string().required(),
         confirmPassword: Joi.string().valid(Joi.ref('acc_passwordHash')).required(),
-        role: Joi.string().valid(Role.Admin, Role.User).required()
+        role: Joi.string().valid(Role.Admin, Role.User).required(),
     });
     validateRequest(req, next, schema);
 }
@@ -231,7 +231,8 @@ function updateSchema(req, res, next) {
         acc_pnumber: Joi.string().empty(''),
         acc_image: Joi.string().uri().empty(''),
         acc_totalpoints: Joi.number().empty(''),
-        acc_role: Joi.string().empty('')
+        acc_role: Joi.string().empty(''), 
+        acc_status: Joi.string().empty(''), 
     });
     validateRequest(req, next, schema);
 }
