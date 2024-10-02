@@ -25,13 +25,21 @@ module.exports = {
 async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
     const account = await db.Account.scope('withHash').findOne({ where: { acc_email } });
 
-    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))){ 
+    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))) { 
         throw 'Email or password is incorrect';
     }
 
+<<<<<<< HEAD
     if (account.acc_status === 'Inactive') {
         throw 'Your account is disabled. Please contact the administrator.';
     }
+=======
+    // Check if the account is verified
+    if (!account.acc_verified) {
+        throw 'Account not verified. Please check your email to verify your account.';
+    }
+
+>>>>>>> 4cb6ae5b88c013c32902acfa2c54621fad4b3e7c
     // Authentication successful
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
@@ -46,6 +54,7 @@ async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
     };
 }
 
+
 async function refreshToken({ token, ipAddress }) {
     const refreshToken = await getRefreshToken(token);
     const account = await refreshToken.getAccount();
@@ -53,6 +62,7 @@ async function refreshToken({ token, ipAddress }) {
     // Replace old refresh token with a new one and save
     const newRefreshToken = generateRefreshToken(account, ipAddress);
     refreshToken.revoked = Date.now();
+    refreshToken.revokedByIp = ipAddress;
     refreshToken.replacedByToken = newRefreshToken.token;
     await refreshToken.save();
     await newRefreshToken.save();
@@ -244,7 +254,7 @@ async function getRefreshToken(token) {
 
 function generateJwtToken(account) {
     // Create a JWT token containing the account ID
-    return jwt.sign({ sub: account.id, id: account.id }, config.secret, { expiresIn: '15m' });
+    return jwt.sign({ sub: account.id, id: account.id }, config.secret, { expiresIn: '58m' });
 }
 
 function generateRefreshToken(account, ipAddress) {
@@ -256,6 +266,7 @@ function generateRefreshToken(account, ipAddress) {
         createdByIp: ipAddress
     });
 }
+
 
 function sendVerificationEmail(account, origin) {
     let message;

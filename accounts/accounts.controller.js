@@ -22,22 +22,18 @@ router.post('/', authorize(Role.Admin), createSchema, create);
 router.put('/:id', authorize(), updateSchema, update);
 router.delete('/:id', authorize(), _delete);
 
-router.post('/logout', authorize(), logout); // Add authorization if needed
 
 
 module.exports = router;
 
 
+<<<<<<< HEAD
 function logout(req, res, next) {
     const { token } = req.body; 
     const ipAddress = req.ip;
+=======
+>>>>>>> 4cb6ae5b88c013c32902acfa2c54621fad4b3e7c
 
-    accountService.revokeToken({ token, ipAddress })
-        .then(() => {
-            res.json({ message: 'Logged out successfully' });
-        })
-        .catch(next);
-}
 
 // Function Definitions
 function authenticateSchema(req, res, next) {
@@ -54,11 +50,23 @@ function authenticate(req, res, next) {
 
     accountService.authenticate({ acc_email, acc_passwordHash, ipAddress })
         .then(({ refreshToken, ...account }) => {
-            setTokenCookie(res, refreshToken);
-            res.json(account);
+            console.log('Generated Refresh Token:', refreshToken); // Ensure this shows the expected token
+            setTokenCookie(res, refreshToken); // Set the cookie
+            console.log("Returning account and refreshToken:", { ...account, refreshToken }); // Log account details
+
+            res.json({ ...account, refreshToken }); // Return refresh token along with account details
         })
-        .catch(next);
+        .catch(err => {
+            // Catch the specific error and respond accordingly
+            if (err === 'Account not verified. Please check your email to verify your account.') {
+                return res.status(403).json({ message: err });
+            }
+            next(err); // For other errors, continue to the default error handler
+        });
 }
+
+
+
 
 function refreshToken(req, res, next) {
     const token = req.cookies.refreshToken;
@@ -79,22 +87,35 @@ function revokeTokenSchema(req, res, next) {
 }
 
 function revokeToken(req, res, next) {
-    const { token } = req.body;
+    console.log('Request Body Token:', req.body.token);
+    console.log('Cookie Token:', req.cookies.refreshToken);
+
+    const token = req.body.token || req.cookies.refreshToken;
     const ipAddress = req.ip;
+
+    if (!token) return res.status(400).json({ message: 'Token is required' });
+
+    
+
+    if (!req.auth.ownsToken(token) && req.auth.role !== Role.Admin) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     accountService.revokeToken({ token, ipAddress })
-        .then(() => {
-            res.json({ message: 'Token revoked' });
-        })
+        .then(() => res.json({ message: 'Token revoked' }))
         .catch(next);
 }
 
+
 function setTokenCookie(res, token) {
+    console.log('Setting Cookie Token:', token);
     const cookieOptions = {
         httpOnly: true,
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     };
     res.cookie('refreshToken', token, cookieOptions);
 }
+
 
 function registerSchema(req, res, next) {
     const schema = Joi.object({

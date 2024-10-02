@@ -29,12 +29,27 @@ async function initialize() {
     db.Account.hasMany(db.Campaign, { onDelete: 'CASCADE' });
     db.Campaign.belongsTo(db.Account);
 
+    db.Event = require('../events/event.model')(sequelize);
+    db.Account.hasMany(db.Event, { onDelete: 'CASCADE' });
+    db.Event.belongsTo(db.Account);
+
+
     //donation
     db.Donation = require('../donations/donation.model')(sequelize); 
     db.Account.hasMany(db.Donation, { onDelete: 'CASCADE' }); 
     db.Campaign.hasMany(db.Donation, { onDelete: 'CASCADE' });
     db.Donation.belongsTo(db.Account); 
     db.Donation.belongsTo(db.Campaign); 
+
+
+    // Rewards
+    db.Reward = require('../rewards/reward.model')(sequelize);
+    db.Account.hasMany(db.Reward, { onDelete: 'CASCADE' });
+    db.Reward.belongsTo(db.Account);
+
+
+
+
 
     await sequelize.sync();
 }

@@ -19,6 +19,8 @@ app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: 
 app.use('/accounts', require('./accounts/accounts.controller'));
 app.use('/campaigns', require('./campaigns/campaign.controller'));
 app.use('/donation', require('./donations/donation.controller'));
+app.use('/rewards', require('./rewards/reward.controller'));
+app.use('/events', require('./events/event.controller')); 
 
 
 
@@ -38,13 +40,6 @@ const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 
 app.listen(port, () => console.log('Server listening on port ' + port));
 
 
-app.post('/logout', async (req, res) => {
-    try {
-        const token = req.body.token; // Get the token from the request body
-        const ipAddress = req.ip; // Get the user's IP address
-        await revokeToken({ token, ipAddress }); // Call the revokeToken function
-        res.status(200).send({ message: 'Logged out successfully' });
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
-});
+
+
+
