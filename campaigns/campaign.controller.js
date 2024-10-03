@@ -7,9 +7,13 @@ const campaignService = require('./campaign.service');
 const authorize = require('_middleware/authorize');
 
 // Use multer for file uploads, with error handling
-router.post('/', multer.single('Campaign_Image'), (req, res, next) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
+// Adjust multer to accept a single campaign image and multiple proof files
+router.post('/', multer.fields([
+    { name: 'Campaign_Image', maxCount: 1 },
+    { name: 'Proof_Files', maxCount: 10 } // adjust the maxCount as needed
+]), (req, res, next) => {
+    if (!req.files || !req.files.Campaign_Image) {
+        return res.status(400).send('No campaign image uploaded.');
     }
     createSchema(req, res, next);
 }, create);
@@ -69,8 +73,9 @@ function createSchema(req, res, next) {
 }
 
 function create(req, res, next) {
-    console.log('File:', req.file); // Log file info to verify
-    campaignService.create(req.body, req.file)
+    console.log('Files:', req.files); // Log files to verify
+    const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
+    campaignService.create(req.body, req.files.Campaign_Image[0], proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
@@ -103,8 +108,9 @@ function updateSchema(req, res, next) {
 }
 
 function update(req, res, next) {
-    console.log('File:', req.file); // Log file info to verify
-    campaignService.update(req.params.id, req.body, req.file)
+    console.log('Files:', req.files); // Log files to verify
+    const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
+    campaignService.update(req.params.id, req.body, req.files.Campaign_Image[0], proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }

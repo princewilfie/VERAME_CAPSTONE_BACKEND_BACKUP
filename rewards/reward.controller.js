@@ -4,14 +4,15 @@ const validateRequest = require('_middleware/validate-request');
 const Joi = require('joi');
 const rewardService = require('./reward.service');
 const authorize = require('_middleware/authorize');
+const multer = require('_middleware/multer-config'); // Import multer for image handling
 
 // Routes
-router.post('/', authorize('Admin'), createSchema, create);
+router.post('/', authorize('Admin'), multer.single('reward_Image'), createSchema, create); // Add image upload
 router.get('/', getAll);
 router.get('/:id', getById);
-router.put('/:id', authorize('Admin'), updateSchema, update);
+router.put('/:id', authorize('Admin'), multer.single('reward_Image'), updateSchema, update); // Add image upload
 router.delete('/:id', authorize('Admin'), _delete);
-router.post('/:id/consume', authorize('Admin'), consume);
+router.post('/:id/redeem', authorize(), redeem); // Replace consume with redeem
 
 module.exports = router;
 
@@ -22,7 +23,10 @@ function createSchema(req, res, next) {
         reward_Description: Joi.string().required(),
         reward_PointCost: Joi.number().required(),
         reward_Quantity: Joi.number().required(),
-        reward_Status: Joi.string().valid('Active', 'Inactive').required()
+        // Make reward_Status optional
+        reward_Status: Joi.string().valid('Active', 'Inactive').optional(), 
+        // Make acc_id optional
+        acc_id: Joi.number().optional() 
     });
     validateRequest(req, next, schema);
 }
@@ -33,14 +37,15 @@ function updateSchema(req, res, next) {
         reward_Description: Joi.string().optional(),
         reward_PointCost: Joi.number().optional(),
         reward_Quantity: Joi.number().optional(),
-        reward_Status: Joi.string().valid('Active', 'Inactive').optional()
+        // Make reward_Status optional
+        reward_Status: Joi.string().valid('Active', 'Inactive').optional(),
     });
     validateRequest(req, next, schema);
 }
 
 // Controller functions
 function create(req, res, next) {
-    rewardService.create(req.body)
+    rewardService.create(req.body, req.file) // Pass file info for image upload
         .then(reward => res.json(reward))
         .catch(next);
 }
@@ -58,7 +63,7 @@ function getById(req, res, next) {
 }
 
 function update(req, res, next) {
-    rewardService.update(req.params.id, req.body)
+    rewardService.update(req.params.id, req.body, req.file) // Pass file info for image upload
         .then(reward => res.json(reward))
         .catch(next);
 }
@@ -69,8 +74,12 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
-function consume(req, res, next) {
-    rewardService.consume(req.params.id)
-        .then(() => res.json({ message: 'Reward consumed and status updated to Inactive' }))
+// Redeem function for reducing quantity and associating with acc_id
+function redeem(req, res, next) {
+    const rewardId = req.params.id;
+    const accountId = req.body.acc_id; // Assuming the account ID is provided in the request body
+
+    rewardService.redeem(rewardId, accountId)
+        .then(() => res.json({ message: 'Reward redeemed successfully' }))
         .catch(next);
 }

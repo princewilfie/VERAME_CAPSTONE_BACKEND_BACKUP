@@ -25,21 +25,21 @@ module.exports = {
 async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
     const account = await db.Account.scope('withHash').findOne({ where: { acc_email } });
 
-    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))) { 
-        throw 'Email or password is incorrect';
-    }
-
-<<<<<<< HEAD
-    if (account.acc_status === 'Inactive') {
-        throw 'Your account is disabled. Please contact the administrator.';
-    }
-=======
-    // Check if the account is verified
     if (!account.acc_verified) {
         throw 'Account not verified. Please check your email to verify your account.';
     }
 
->>>>>>> 4cb6ae5b88c013c32902acfa2c54621fad4b3e7c
+    if (!account || !(await bcrypt.compare(acc_passwordHash, account.acc_passwordHash))) { 
+        throw 'Email or password is incorrect';
+    }
+
+    if (account.acc_status === 'Inactive') {
+        throw 'Your account is disabled. Please contact the administrator.';
+    }
+
+    // Check if the account is verified
+    
+
     // Authentication successful
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
@@ -53,6 +53,7 @@ async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
         refreshToken: refreshToken.token
     };
 }
+
 
 
 async function refreshToken({ token, ipAddress }) {

@@ -1,4 +1,5 @@
 const db = require('_helpers/db');
+const path = require('path');
 
 module.exports = {
     create,
@@ -6,36 +7,56 @@ module.exports = {
     getById,
     update,
     _delete,
-    consume
+    redeem
 };
 
-async function create(params) {
-    // Create a new reward instance and save it to the database
-    const reward = new db.Reward(params);
+async function create(params, file) {
+    validateRewardParams(params);
+
+    // Define a default image path if no file is uploaded
+    const defaultImagePath = path.join(__dirname, '../assets/default-reward.png');
+    const imagePath = file ? file.path : defaultImagePath; // Set image path
+
+    const reward = new db.Reward({
+        ...params,
+        reward_Image: imagePath // Add the image path to reward
+    });
+
+    updateRewardStatus(reward); // Set status based on quantity
+    await reward.save();
+    return reward;
+}
+
+async function update(id, params, file) {
+    const reward = await getReward(id);
+    validateRewardParams(params);
+
+    if (file) {
+        const newImagePath = file.path; // Update the image path if a new file is uploaded
+        params.reward_Image = newImagePath;
+    }
+
+    Object.assign(reward, params);
+    updateRewardStatus(reward); // Set status based on quantity
     await reward.save();
     return reward;
 }
 
 async function getAll() {
-    // Fetch all rewards from the database
-    return await db.Reward.findAll();
+    return await db.Reward.findAll({
+        where: {
+            reward_Quantity: {
+                [db.Sequelize.Op.gt]: 0
+            }
+        }
+    });
 }
 
 async function getById(id) {
-    // Fetch reward by its ID
     return await getReward(id);
 }
 
-async function update(id, params) {
-    // Fetch the reward by ID and update it with new values
-    const reward = await getReward(id);
-    Object.assign(reward, params);
-    await reward.save();
-    return reward;
-}
-
 async function _delete(id) {
-    // Fetch the reward by ID and delete it
     const reward = await getReward(id);
     await reward.destroy();
 }
@@ -45,10 +66,30 @@ async function getReward(id) {
     if (!reward) throw 'Reward not found';
     return reward;
 }
-async function consume(id) {
-    // Fetch the reward by ID
+
+async function redeem(id, acc_id) {
+    const account = await db.Account.findByPk(acc_id);
+    if (!account) throw 'Account not found';
+
     const reward = await getReward(id);
-    // Update its status to 'Inactive'
-    reward.reward_Status = 'Inactive';
+    
+    if (reward.reward_Quantity <= 0 || reward.reward_Status === 'Inactive') {
+        throw 'Reward is not available for redemption';
+    }
+
+    reward.reward_Quantity -= 1;
+    reward.acc_id = acc_id;
+    updateRewardStatus(reward);
     await reward.save();
+    return reward;
+}
+
+function validateRewardParams(params) {
+    if (params.reward_Quantity < 0) {
+        throw 'Quantity cannot be negative';
+    }
+}
+
+function updateRewardStatus(reward) {
+    reward.reward_Status = reward.reward_Quantity > 0 ? 'Active' : 'Inactive';
 }

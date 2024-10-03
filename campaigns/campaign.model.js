@@ -13,6 +13,7 @@ function model(sequelize) {
         Campaign_Status: { type: DataTypes.INTEGER, allowNull: false },
         Campaign_Category: { type: DataTypes.STRING, allowNull: false },
         Campaign_Image: { type: DataTypes.STRING, allowNull: true },
+        Proof_Files: { type: DataTypes.TEXT, allowNull: true },
         Campaign_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
     };
 

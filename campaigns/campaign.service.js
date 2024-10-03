@@ -11,43 +11,39 @@ module.exports = {
     reject
 };
 
-async function create(params, file) {
-    // Define a default image path if no file is uploaded
+async function create(params, campaignImage, proofFiles) {
     const defaultImagePath = path.join(__dirname, '../assets/default-profile.png');
+    const imagePath = campaignImage ? campaignImage.path : defaultImagePath;
 
-    // Use the file path provided by multer if a file is uploaded, otherwise use the default image
-    const imagePath = file ? file.path : defaultImagePath;
-
-    // Create a new campaign instance with the provided parameters
+    // Create a new campaign with campaign image and proof files
     const campaign = new db.Campaign({
         ...params,
         Campaign_Image: imagePath,
-        Campaign_ApprovalStatus: 'Waiting For Approval' // Set status to Pending on creation
+        Proof_Files: JSON.stringify(proofFiles), // Store proof files as JSON
+        Campaign_ApprovalStatus: 'Waiting For Approval'
     });
 
-    // Save the campaign to the database
     await campaign.save();
-
     return campaign;
 }
 
-async function update(id, params, file) {
+async function update(id, params, campaignImage, proofFiles) {
     const campaign = await getById(id);
 
-    // Update image if a new file is uploaded
-    if (file) {
-        // Optionally, delete the old image file here if needed
-        const newImagePath = file.path;
-        params.Campaign_Image = newImagePath;
+    if (campaignImage) {
+        params.Campaign_Image = campaignImage.path;
     }
 
-    // Update campaign with new parameters
-    Object.assign(campaign, params);
+    if (proofFiles.length > 0) {
+        params.Proof_Files = JSON.stringify(proofFiles); // Update proof files
+    }
 
+    Object.assign(campaign, params);
     await campaign.save();
 
     return campaign;
 }
+
 
 async function approve(id) {
     const campaign = await getById(id);

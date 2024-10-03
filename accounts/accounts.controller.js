@@ -27,12 +27,6 @@ router.delete('/:id', authorize(), _delete);
 module.exports = router;
 
 
-<<<<<<< HEAD
-function logout(req, res, next) {
-    const { token } = req.body; 
-    const ipAddress = req.ip;
-=======
->>>>>>> 4cb6ae5b88c013c32902acfa2c54621fad4b3e7c
 
 
 // Function Definitions
