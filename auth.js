@@ -1,9 +1,11 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+require('dotenv').config();  // Load environment variables from .env file
+const jwt = require('jsonwebtoken'); // Assuming you're using this to generate JWTs
 
 passport.use(new GoogleStrategy({
-    clientID: '344605713356-ctgu2dlpij9k57ff5eoi1o8nr0qd4vt6.apps.googleusercontent.com',
-    clientSecret: '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',
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: 'http://localhost:4200/auth/google/callback',
     passReqToCallback: true
   },
@@ -21,10 +23,9 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-
 // Generate JWT token
 function generateJWT(user) {
-  return jwt.sign({ id: user.id, email: user.emails[0].value }, 'your_jwt_secret', { expiresIn: '1h' });
+  return jwt.sign({ id: user.id, email: user.emails[0].value }, process.env.JWT_SECRET, { expiresIn: '1h' });
 }
 
 // Define routes for Google OAuth authentication
@@ -46,6 +47,5 @@ function setupGoogleAuthRoutes(app) {
     res.redirect('/');
   });
 }
-
 
 module.exports = { setupGoogleAuthRoutes };
