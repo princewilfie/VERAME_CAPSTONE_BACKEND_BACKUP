@@ -20,7 +20,7 @@ const session = require('express-session');
 
 // Session setup for Passport.js
 app.use(session({
-    secret: 'kjhr3vi3nvw39y2394n23219o13241f',
+    secret: '',
     resave: false,
     saveUninitialized: true
 }));
