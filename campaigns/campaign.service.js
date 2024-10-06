@@ -8,7 +8,8 @@ module.exports = {
     update,
     _delete,
     approve,
-    reject
+    reject,
+    getByAccountId
 };
 
 async function create(params, campaignImage, proofFiles) {
@@ -72,4 +73,8 @@ async function getById(id) {
 async function _delete(id) {
     const campaign = await getById(id);
     await campaign.destroy();
+}
+
+async function getByAccountId(accountId) {
+    return await db.Campaign.findAll({ where: { Acc_ID: accountId } });
 }

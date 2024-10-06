@@ -18,6 +18,8 @@ router.post('/', multer.fields([
     createSchema(req, res, next);
 }, create);
 
+router.get('/account/:id', getByAccountId);
+
 // Get all approved campaigns
 router.get('/', getAll);
 
@@ -118,5 +120,12 @@ function update(req, res, next) {
 function _delete(req, res, next) {
     campaignService._delete(req.params.id)
         .then(() => res.json({ message: 'Campaign deleted successfully' }))
+        .catch(next);
+}
+
+function getByAccountId(req, res, next) {
+    const accountId = req.params.id;
+    campaignService.getByAccountId(accountId)
+        .then(campaigns => res.json(campaigns))
         .catch(next);
 }
