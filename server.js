@@ -13,7 +13,37 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }));
+
+
+const passport = require('passport');
+const session = require('express-session');
+
+// Session setup for Passport.js
+app.use(session({
+    secret: 'kjhr3vi3nvw39y2394n23219o13241f',
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Import Google OAuth routes from auth.js
+const { setupGoogleAuthRoutes } = require('./auth');
+setupGoogleAuthRoutes(app); // Setup Google OAuth routes
+
+
+// Paymongo routes
+const paymongoRoutes = require('./paymongo/paymongo.routes');
+app.use('/paymongo', paymongoRoutes);
+
+app.use(cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true
+}));
+
+
+
 
 // api routes
 app.use('/accounts', require('./accounts/accounts.controller'));
@@ -32,6 +62,8 @@ app.use('/api-docs', require('_helpers/swagger'));
 app.use(errorHandler);
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+app.use('/uploads', express.static('uploads'));
 
 
 
