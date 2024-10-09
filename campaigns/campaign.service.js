@@ -9,7 +9,8 @@ module.exports = {
     _delete,
     approve,
     reject,
-    getByAccountId
+    getByAccountId,
+    getAllApproved
 };
 
 async function create(params, campaignImage, proofFiles) {
@@ -64,6 +65,16 @@ async function getAll() {
     return await db.Campaign.findAll();
 }
 
+async function getAllApproved() {
+    return await db.Campaign.findAll({
+        where: {
+            Campaign_ApprovalStatus: 'Approved'
+        }
+    });
+}
+
+
+
 async function getById(id) {
     const campaign = await db.Campaign.findByPk(id);
     if (!campaign) throw 'Campaign not found';
@@ -78,3 +89,8 @@ async function _delete(id) {
 async function getByAccountId(accountId) {
     return await db.Campaign.findAll({ where: { Acc_ID: accountId } });
 }
+
+
+
+
+

@@ -77,9 +77,11 @@ function _delete(req, res, next) {
 // Redeem function for reducing quantity and associating with acc_id
 function redeem(req, res, next) {
     const rewardId = req.params.id;
-    const accountId = req.body.acc_id; // Assuming the account ID is provided in the request body
+    const accountId = req.body.acc_id; // Get account ID from the request body (can be retrieved automatically if logged in)
+    const address = req.body.address; // Get address from the request body
 
-    rewardService.redeem(rewardId, accountId)
+    rewardService.redeem(rewardId, accountId, address)
         .then(() => res.json({ message: 'Reward redeemed successfully' }))
         .catch(next);
 }
+

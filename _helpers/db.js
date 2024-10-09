@@ -48,6 +48,15 @@ async function initialize() {
     db.Reward.belongsTo(db.Account);
 
 
+    // RedeemReward
+    db.RedeemReward = require('../redeemReward/redeemReward.model')(sequelize);
+
+    // Set up relationships for RedeemReward
+    db.Account.hasMany(db.RedeemReward, { onDelete: 'CASCADE' }); // FK1
+    db.RedeemReward.belongsTo(db.Account);
+
+    db.Reward.hasMany(db.RedeemReward, { onDelete: 'CASCADE' }); // FK2
+    db.RedeemReward.belongsTo(db.Reward);
 
 
 

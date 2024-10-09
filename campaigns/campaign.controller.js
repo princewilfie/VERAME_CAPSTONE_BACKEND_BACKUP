@@ -20,6 +20,16 @@ router.post('/', multer.fields([
 
 router.get('/account/:id', getByAccountId);
 
+// Fetch all approved campaigns
+router.get('/approved', getAllApproved);
+
+function getAllApproved(req, res, next) {
+    campaignService.getAllApproved()
+        .then(campaigns => res.json(campaigns))
+        .catch(next);
+}
+
+
 // Get all approved campaigns
 router.get('/', getAll);
 
