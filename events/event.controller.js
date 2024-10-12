@@ -15,6 +15,8 @@ router.post('/', multer.single('Event_Image'), (req, res, next) => {
 }, create);
 
 router.get('/', getAll);
+router.get('/account/:id', getByAccountId); 
+router.get('/approved', getAllApproved);  // New route for approved events
 router.get('/:id', getById);
 router.put('/:id', multer.single('image'), (req, res, next) => {
     if (!req.file) {
@@ -23,6 +25,9 @@ router.put('/:id', multer.single('image'), (req, res, next) => {
     updateSchema(req, res, next);
 }, update);
 router.delete('/:id', authorize('Admin'), _delete);
+
+router.put('/:id/approve', authorize('Admin'), approve);
+router.put('/:id/reject', authorize('Admin'), reject);
 
 module.exports = router;
 
@@ -50,6 +55,20 @@ function getAll(req, res, next) {
         .catch(next);
 }
 
+function getByAccountId(req, res, next) {
+    const accountId = req.params.id;
+    eventService.getByAccountId(accountId)
+        .then(events => res.json(events))
+        .catch(next);
+}
+
+function getAllApproved(req, res, next) {  // Handler for approved events
+    eventService.getAllApproved()
+        .then(events => res.json(events))
+        .catch(next);
+}
+
+
 function getById(req, res, next) {
     eventService.getById(req.params.id)
         .then(event => res.json(event))
@@ -76,5 +95,17 @@ function update(req, res, next) {
 function _delete(req, res, next) {
     eventService._delete(req.params.id)
         .then(() => res.json({ message: 'Event deleted successfully' }))
+        .catch(next);
+}
+
+function approve(req, res, next) {
+    eventService.approve(req.params.id)
+        .then(event => res.json(event))
+        .catch(next);
+}
+
+function reject(req, res, next) {
+    eventService.reject(req.params.id)
+        .then(event => res.json(event))
         .catch(next);
 }

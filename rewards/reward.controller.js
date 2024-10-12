@@ -12,7 +12,7 @@ router.get('/', getAll);
 router.get('/:id', getById);
 router.put('/:id', authorize('Admin'), multer.single('reward_Image'), updateSchema, update); // Add image upload
 router.delete('/:id', authorize('Admin'), _delete);
-router.post('/:id/redeem', authorize(), redeem); // Replace consume with redeem
+router.post('/redeem', redeem); // Now you don't need ':id' in the route
 
 module.exports = router;
 
@@ -75,13 +75,18 @@ function _delete(req, res, next) {
 }
 
 // Redeem function for reducing quantity and associating with acc_id
+// Update the route to no longer require reward ID in the URL
+router.post('/redeem', authorize(), redeem); // Now you don't need ':id' in the route
+
+// Redeem function for reducing quantity and associating with acc_id
 function redeem(req, res, next) {
-    const rewardId = req.params.id;
-    const accountId = req.body.acc_id; // Get account ID from the request body (can be retrieved automatically if logged in)
-    const address = req.body.address; // Get address from the request body
+    const rewardId = req.body.reward_id; // Get reward ID from the request body
+    const accountId = req.body.acc_id;   // Get account ID from the request body
+    const address = req.body.address;    // Get address from the request body
 
     rewardService.redeem(rewardId, accountId, address)
         .then(() => res.json({ message: 'Reward redeemed successfully' }))
         .catch(next);
 }
+
 

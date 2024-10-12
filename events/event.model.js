@@ -9,7 +9,9 @@ function model(sequelize) {
         Event_Date: { type: DataTypes.DATE, allowNull: false },
         Event_Location: { type: DataTypes.STRING, allowNull: false },
         Event_Status: { type: DataTypes.INTEGER, allowNull: false },
-        Event_Image: { type: DataTypes.STRING, allowNull: true }
+        Event_Image: { type: DataTypes.STRING, allowNull: true },
+        Event_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' }
+
     };
 
     const options = {

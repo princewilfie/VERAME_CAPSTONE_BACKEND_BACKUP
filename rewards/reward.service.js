@@ -1,5 +1,7 @@
 const db = require('_helpers/db');
 const path = require('path');
+const sendEmail = require('_helpers/send-email');
+
 
 module.exports = {
     create,
@@ -91,8 +93,24 @@ async function redeem(id, acc_id, address) {
         redeemReward_address: address // Address can be passed as part of the redeem request
     });
 
+    // Compose the email details
+    const emailOptions = {
+        to: account.acc_email,  // Assuming the account has an email field
+        subject: 'Reward Redeemed Successfully',
+        html: `
+            <p>Dear ${account.acc_firstname},</p>
+            <p>You have successfully redeemed the reward: ${reward.reward_Name}.</p>
+            <p>Delivery Address: ${address}</p>
+            <p>Thank you for using our service!</p>
+        `
+    };
+
+    // Send email notification
+    await sendEmail(emailOptions);
+
     return reward;
 }
+
 
 
 function validateRewardParams(params) {
