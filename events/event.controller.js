@@ -5,8 +5,8 @@ const validateRequest = require('_middleware/validate-request');
 const Joi = require('joi');
 const eventService = require('./event.service');
 const authorize = require('_middleware/authorize');
+const eventParticipantService = require('../eventParticipant/eventParticipant.service'); // Importing the event participant service
 
-// Use multer for file uploads
 router.post('/', multer.single('Event_Image'), (req, res, next) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
@@ -15,8 +15,8 @@ router.post('/', multer.single('Event_Image'), (req, res, next) => {
 }, create);
 
 router.get('/', getAll);
-router.get('/account/:id', getByAccountId); 
-router.get('/approved', getAllApproved);  // New route for approved events
+router.get('/account/:id', getByAccountId);
+router.get('/approved', getAllApproved);
 router.get('/:id', getById);
 router.put('/:id', multer.single('image'), (req, res, next) => {
     if (!req.file) {
@@ -25,9 +25,12 @@ router.put('/:id', multer.single('image'), (req, res, next) => {
     updateSchema(req, res, next);
 }, update);
 router.delete('/:id', authorize('Admin'), _delete);
-
 router.put('/:id/approve', authorize('Admin'), approve);
 router.put('/:id/reject', authorize('Admin'), reject);
+
+// Update route for getting participants by Event_ID in the request body
+router.post('/participants', getEventParticipants); // Change this line
+router.post('/join', joinEvent); // Ensure this line is present
 
 module.exports = router;
 
@@ -62,16 +65,23 @@ function getByAccountId(req, res, next) {
         .catch(next);
 }
 
-function getAllApproved(req, res, next) {  // Handler for approved events
+function getAllApproved(req, res, next) {
     eventService.getAllApproved()
         .then(events => res.json(events))
         .catch(next);
 }
 
-
 function getById(req, res, next) {
     eventService.getById(req.params.id)
         .then(event => res.json(event))
+        .catch(next);
+}
+
+function joinEvent(req, res, next) {
+    console.log('Request body:', req.body); // Log the request body
+    const { Acc_ID, Event_ID } = req.body;
+    eventParticipantService.joinEvent(Acc_ID, Event_ID)
+        .then(message => res.json(message))
         .catch(next);
 }
 
@@ -107,5 +117,16 @@ function approve(req, res, next) {
 function reject(req, res, next) {
     eventService.reject(req.params.id)
         .then(event => res.json(event))
+        .catch(next);
+}
+
+// Update getEventParticipants to use request body instead of URL params
+function getEventParticipants(req, res, next) {
+    const { Event_ID } = req.body; // Get Event_ID from the request body
+    if (!Event_ID) {
+        return res.status(400).json({ message: 'Event_ID is required' }); // Validate input
+    }
+    eventParticipantService.getAllParticipants(Event_ID) // Call the service function
+        .then(participants => res.json(participants))
         .catch(next);
 }

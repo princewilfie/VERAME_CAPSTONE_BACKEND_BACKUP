@@ -58,7 +58,15 @@ async function initialize() {
     db.Reward.hasMany(db.RedeemReward, { onDelete: 'CASCADE' }); // FK2
     db.RedeemReward.belongsTo(db.Reward);
 
+    // EventParticipant model
+    db.EventParticipant = require('../eventParticipant/eventParticipant.model')(sequelize);
 
+    // Define relationships
+    db.Event.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // An event can have many participants
+    db.EventParticipant.belongsTo(db.Event);  // A participant belongs to an event
+
+    db.Account.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // A user can join many events
+    db.EventParticipant.belongsTo(db.Account);  // A participant belongs to an account
 
     await sequelize.sync();
 }

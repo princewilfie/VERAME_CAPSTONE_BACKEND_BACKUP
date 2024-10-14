@@ -8,10 +8,12 @@ module.exports = {
     update,
     _delete,
     approve,
-    reject,  
+    reject,
     getAllApproved,
-    getByAccountId    
-
+    getByAccountId,
+    joinEvent,          // New function for joining events
+    getJoinedEvents,    // New function to get joined events
+    getEventParticipants // Add this line
 };
 
 async function create(params, file) {
@@ -21,7 +23,7 @@ async function create(params, file) {
     const event = new db.Event({
         ...params,
         Event_Image: imagePath,
-        Event_ApprovalStatus: 'Pending' // Default to 'Pending' when created
+        Event_ApprovalStatus: 'Pending'
     });
 
     await event.save();
@@ -43,14 +45,14 @@ async function update(id, params, file) {
 
 async function approve(id) {
     const event = await getById(id);
-    event.Event_ApprovalStatus = 'Approved';  // Set to 'Approved'
+    event.Event_ApprovalStatus = 'Approved';
     await event.save();
     return event;
 }
 
 async function reject(id) {
     const event = await getById(id);
-    event.Event_ApprovalStatus = 'Rejected';  // Set to 'Rejected'
+    event.Event_ApprovalStatus = 'Rejected';
     await event.save();
     return event;
 }
@@ -66,11 +68,10 @@ async function getByAccountId(accountId) {
 async function getAllApproved() {
     return await db.Event.findAll({
         where: {
-            Event_ApprovalStatus: 'Approved'  // Fetch only approved events
+            Event_ApprovalStatus: 'Approved'
         }
     });
 }
-
 
 async function getById(id) {
     const event = await db.Event.findByPk(id);
@@ -82,3 +83,24 @@ async function _delete(id) {
     const event = await getById(id);
     await event.destroy();
 }
+
+async function joinEvent(accId, eventId) {
+    const event = await getById(eventId);
+    if (!event) throw 'Event not found';
+
+    const existingParticipant = await db.EventParticipant.findOne({ where: { Acc_ID: accId, Event_ID: eventId } });
+    if (existingParticipant) throw 'User already joined this event';
+
+    const participant = new db.EventParticipant({ Acc_ID: accId, Event_ID: eventId });
+    await participant.save();
+    return { message: 'Joined event successfully' };
+}
+
+async function getJoinedEvents(accId) {
+    return await db.EventParticipant.findAll({ where: { Acc_ID: accId } });
+}
+
+async function getEventParticipants(eventId) {
+    return await eventParticipantService.getAllParticipants(eventId); // Call the function from eventParticipant service
+}
+
