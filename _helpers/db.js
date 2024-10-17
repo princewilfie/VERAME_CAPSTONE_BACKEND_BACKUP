@@ -1,6 +1,7 @@
 const config = require('config.json');
 const mysql = require('mysql2/promise');
-const {Sequelize} = require('sequelize');
+const {Sequelize, Op} = require('sequelize');
+
 
 module.exports = db = {};
 
@@ -15,6 +16,8 @@ async function initialize() {
 
     const sequelize = new Sequelize(database, user, password, { 
         host, port, dialect: 'mysql'});
+        db.Op = Op;  
+
 
     //accounts
     db.Account = require('../accounts/account.model')(sequelize);
@@ -67,6 +70,18 @@ async function initialize() {
 
     db.Account.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // A user can join many events
     db.EventParticipant.belongsTo(db.Account);  // A participant belongs to an account
+
+
+    // Withdraw model
+    db.Withdraw = require('../withdraw/withdraw.model')(sequelize);
+
+    // Set up relationships for Withdraw
+    db.Account.hasMany(db.Withdraw, { onDelete: 'CASCADE' }); // An account can make multiple withdrawals
+    db.Withdraw.belongsTo(db.Account); // A withdrawal belongs to one account
+    db.Campaign.hasMany(db.Withdraw, { onDelete: 'CASCADE' }); // A campaign can have multiple withdrawals
+    db.Withdraw.belongsTo(db.Campaign); // A withdrawal belongs to one campaign
+
+
 
     await sequelize.sync();
 }

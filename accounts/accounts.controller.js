@@ -84,7 +84,7 @@ function revokeToken(req, res, next) {
     console.log('Request Body Token:', req.body.token);
     console.log('Cookie Token:', req.cookies.refreshToken);
 
-    const token = req.body.token || req.cookies.refreshToken;
+    const token = req.cookies.refreshToken;
     const ipAddress = req.ip;
 
     if (!token) return res.status(400).json({ message: 'Token is required' });

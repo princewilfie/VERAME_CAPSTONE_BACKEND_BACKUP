@@ -68,6 +68,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/uploads', express.static('uploads'));
 
+app.use('/withdraw', require('./withdraw/withdraw.controller'));
 
 
 // start server

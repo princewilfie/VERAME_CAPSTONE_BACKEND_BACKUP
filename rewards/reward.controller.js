@@ -9,6 +9,7 @@ const multer = require('_middleware/multer-config'); // Import multer for image 
 // Routes
 router.post('/', authorize('Admin'), multer.single('reward_Image'), createSchema, create); // Add image upload
 router.get('/', getAll);
+router.get('/admin', authorize('Admin'), getAllForAdmin); // Admins see all rewards
 router.get('/:id', getById);
 router.put('/:id', authorize('Admin'), multer.single('reward_Image'), updateSchema, update); // Add image upload
 router.delete('/:id', authorize('Admin'), _delete);
@@ -56,6 +57,13 @@ function getAll(req, res, next) {
         .catch(next);
 }
 
+
+function getAllForAdmin(req, res, next) {
+    rewardService.getAllForAdmin()
+        .then(rewards => res.json(rewards))
+        .catch(next);
+}
+
 function getById(req, res, next) {
     rewardService.getById(req.params.id)
         .then(reward => res.json(reward))
@@ -74,11 +82,6 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
-// Redeem function for reducing quantity and associating with acc_id
-// Update the route to no longer require reward ID in the URL
-router.post('/redeem', authorize(), redeem); // Now you don't need ':id' in the route
-
-// Redeem function for reducing quantity and associating with acc_id
 function redeem(req, res, next) {
     const rewardId = req.body.reward_id; // Get reward ID from the request body
     const accountId = req.body.acc_id;   // Get account ID from the request body
@@ -88,5 +91,3 @@ function redeem(req, res, next) {
         .then(() => res.json({ message: 'Reward redeemed successfully' }))
         .catch(next);
 }
-
-

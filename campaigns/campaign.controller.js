@@ -36,11 +36,12 @@ router.get('/', getAll);
 // Get an approved campaign by ID
 router.get('/:id', getById);
 
-// Update a campaign, with file upload
-router.put('/:id', multer.single('image'), (req, res, next) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
+// File upload for updating campaigns
+router.put('/:id', multer.fields([
+    { name: 'Campaign_Image', maxCount: 1 },
+    { name: 'Proof_Files', maxCount: 10 }
+]), (req, res, next) => {
+    // Files are optional in update, no need to check
     updateSchema(req, res, next);
 }, update);
 
@@ -52,6 +53,23 @@ router.put('/:id/approve', authorize('Admin'), approve);
 
 // Reject a campaign (only accessible by admin)
 router.put('/:id/reject', authorize('Admin'), reject);
+
+router.post('/:id/donate', async (req, res, next) => {
+    const { amount } = req.body;
+    try {
+        const campaign = await campaignService.getById(req.params.id); // Fetch the campaign
+        if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+
+        // Create payment intent using PayMongo service
+        const paymentIntent = await paymongoService.createPaymentIntent(amount);
+        res.status(200).json({ 
+            message: 'Payment intent created',
+            source_url: paymentIntent.data.attributes.next_action.redirect.url
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 module.exports = router;
 
@@ -86,8 +104,9 @@ function createSchema(req, res, next) {
 
 function create(req, res, next) {
     console.log('Files:', req.files); // Log files to verify
+    const campaignImage = req.files.Campaign_Image ? req.files.Campaign_Image[0] : null;
     const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
-    campaignService.create(req.body, req.files.Campaign_Image[0], proofFiles)
+        campaignService.create(req.body, req.files.Campaign_Image[0], proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
@@ -121,8 +140,14 @@ function updateSchema(req, res, next) {
 
 function update(req, res, next) {
     console.log('Files:', req.files); // Log files to verify
+    const campaignImage = req.files.Campaign_Image ? req.files.Campaign_Image[0] : null;
     const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
-    campaignService.update(req.params.id, req.body, req.files.Campaign_Image[0], proofFiles)
+
+     // Override status and approval fields
+     req.body.Campaign_Status = 0;  // Automatically set status to 0 (Pending)
+     req.body.Campaign_ApprovalStatus = 'Waiting For Approval';  // Automatically set approval status to 'Pending'
+
+    campaignService.update(req.params.id, req.body, campaignImage, proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
@@ -134,8 +159,7 @@ function _delete(req, res, next) {
 }
 
 function getByAccountId(req, res, next) {
-    const accountId = req.params.id;
-    campaignService.getByAccountId(accountId)
+    campaignService.getByAccountId(req.params.id)
         .then(campaigns => res.json(campaigns))
         .catch(next);
 }

@@ -2,15 +2,16 @@ const db = require('_helpers/db');
 const path = require('path');
 const sendEmail = require('_helpers/send-email');
 
-
 module.exports = {
     create,
     getAll,
     getById,
     update,
     _delete,
-    redeem
+    redeem,
+    getAllForAdmin
 };
+
 
 async function create(params, file) {
     validateRewardParams(params);
@@ -54,6 +55,11 @@ async function getAll() {
     });
 }
 
+async function getAllForAdmin() {
+    // Return all rewards for admin users
+    return await db.Reward.findAll();
+}
+
 async function getById(id) {
     return await getReward(id);
 }
@@ -67,6 +73,44 @@ async function getReward(id) {
     const reward = await db.Reward.findByPk(id);
     if (!reward) throw 'Reward not found';
     return reward;
+}
+
+async function redeem(id, acc_id, address) {
+    const account = await db.Account.findByPk(acc_id);
+    if (!account) throw 'Account not found';
+
+    const reward = await getReward(id);
+
+    if (reward.reward_Quantity <= 0 || reward.reward_Status === 'Inactive') {
+        throw 'Reward is not available for redemption';
+    }
+
+    // Reduce reward quantity
+    reward.reward_Quantity -= 1;
+    updateRewardStatus(reward);
+    await reward.save();
+
+    // Store redemption details in RedeemReward table
+    const redemptionDate = new Date(); // Use current date as redemption date
+    await db.RedeemReward.create({
+        acc_id: acc_id,
+        reward_ID: id,
+        redeemReward_RedemptionDate: redemptionDate,
+        redeemReward_address: address // Address can be passed as part of the redeem request
+    });
+
+    return reward;
+}
+
+
+function validateRewardParams(params) {
+    if (params.reward_Quantity < 0) {
+        throw 'Quantity cannot be negative';
+    }
+}
+
+function updateRewardStatus(reward) {
+    reward.reward_Status = reward.reward_Quantity > 0 ? 'Active' : 'Inactive';
 }
 
 async function redeem(id, acc_id, address) {
@@ -109,16 +153,4 @@ async function redeem(id, acc_id, address) {
     await sendEmail(emailOptions);
 
     return reward;
-}
-
-
-
-function validateRewardParams(params) {
-    if (params.reward_Quantity < 0) {
-        throw 'Quantity cannot be negative';
-    }
-}
-
-function updateRewardStatus(reward) {
-    reward.reward_Status = reward.reward_Quantity > 0 ? 'Active' : 'Inactive';
 }
