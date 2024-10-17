@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const sendEmail = require('_helpers/send-email');
+const path = require('path');
+
 
 module.exports = {
     authenticate,
@@ -77,6 +79,7 @@ async function refreshToken({ token, ipAddress }) {
         refreshToken: newRefreshToken.token
     };
 }
+
 
 async function revokeToken({ token, ipAddress }) {
     const refreshToken = await getRefreshToken(token);
@@ -213,26 +216,40 @@ async function create(params) {
     return basicDetails(account);
 }
 
-async function update(id, params) {
-    const account = await getAccount(id);
 
-    // Validate
-    const emailChanged = params.acc_email && account.acc_email !== params.acc_email;
-    if (emailChanged && await db.Account.findOne({ where: { acc_email: params.acc_email } })) {
-        throw 'Email "' + params.acc_email + '" is already registered';
+
+async function update(id, params, file) {
+    try {
+        const account = await getAccount(id);
+        
+        // Handle new image file if provided
+        if (file) {
+            const newImagePath = path.basename(file.path);
+            params.acc_image = newImagePath;
+        }
+
+        // Validate email if it has changed
+        const emailChanged = params.acc_email && account.acc_email !== params.acc_email;
+        if (emailChanged && await db.Account.findOne({ where: { acc_email: params.acc_email } })) {
+            throw new Error('Email "' + params.acc_email + '" is already registered');
+        }
+
+        // Hash password if provided
+        if (params.acc_passwordHash) {
+            params.acc_passwordHash = bcrypt.hashSync(params.acc_passwordHash, 10);
+        }
+
+        // Copy params to account and save
+        Object.assign(account, params);
+        await account.save();
+
+        return basicDetails(account);
+    } catch (error) {
+        // Handle errors appropriately, possibly logging the error
+        throw new Error('Failed to update account: ' + error.message);
     }
-
-    // Hash password if it was entered
-    if (params.acc_passwordHash) {
-        params.acc_passwordHash = bcrypt.hashSync(params.acc_passwordHash, 10);
-    }
-
-    // Copy params to account and save
-    Object.assign(account, params);
-    await account.save();
-
-    return basicDetails(account);
 }
+
 
 async function _delete(id) {
     const account = await getAccount(id);
@@ -309,6 +326,6 @@ function sendPasswordResetEmail(account, origin) {
 }
 
 function basicDetails(account) {
-    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status } = account;
-    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status };
+    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image } = account;
+    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image };
 }

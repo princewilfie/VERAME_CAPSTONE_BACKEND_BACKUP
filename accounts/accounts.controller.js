@@ -19,7 +19,13 @@ router.post('/reset-password', resetPasswordSchema, resetPassword);
 router.get('/', authorize(Role.Admin), getAll);
 router.get('/:id', authorize(), getById);
 router.post('/', authorize(Role.Admin), createSchema, create);
-router.put('/:id', authorize(), updateSchema, update);
+
+router.put('/:id', multer.single('acc_image'), (req, res, next) => {
+    updateSchema(req, res, next);
+}, update);
+
+
+
 router.delete('/:id', authorize(), _delete);
 
 
@@ -128,7 +134,10 @@ function registerSchema(req, res, next) {
 function register(req, res, next) {
     // Access file information from req.file
     const { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role } = req.body;
-    const acc_image = req.file ? req.file.path : null; // Default to null if no image uploaded
+    const acc_image = req.file ? path.basename(req.file.path) : 'default-image.png'; // Change null to 'default-image.png'
+
+
+    
 
     const body = { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, acc_image };
 
@@ -244,7 +253,6 @@ function updateSchema(req, res, next) {
         acc_lastname: Joi.string().empty(''),
         acc_passwordHash: Joi.string().min(6).empty(''),
         acc_pnumber: Joi.string().empty(''),
-        acc_image: Joi.string().uri().empty(''),
         acc_totalpoints: Joi.number().empty(''),
         acc_role: Joi.string().empty(''), 
         acc_status: Joi.string().empty(''), 
@@ -253,12 +261,15 @@ function updateSchema(req, res, next) {
 }
 
 function update(req, res, next) {
-    accountService.update(req.params.id, req.body)
+    accountService.update(req.params.id, req.body, req.file)
         .then(account => {
             res.json(account);
         })
         .catch(next);
 }
+
+
+
 
 function _delete(req, res, next) {
     accountService.delete(req.params.id)
