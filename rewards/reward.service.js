@@ -17,7 +17,7 @@ async function create(params, file) {
     validateRewardParams(params);
 
     // Define a default image path if no file is uploaded
-    const defaultImagePath = path.basename('default-reward.png'); // Only save the file name
+    const defaultImagePath = path.basename('assets/default-reward.png'); // Only save the file name
     const imagePath = file ? path.basename(file.path) : defaultImagePath; // Save only the filename
 
     const reward = new db.Reward({
@@ -75,34 +75,6 @@ async function getReward(id) {
     return reward;
 }
 
-async function redeem(id, acc_id, address) {
-    const account = await db.Account.findByPk(acc_id);
-    if (!account) throw 'Account not found';
-
-    const reward = await getReward(id);
-
-    if (reward.reward_Quantity <= 0 || reward.reward_Status === 'Inactive') {
-        throw 'Reward is not available for redemption';
-    }
-
-    // Reduce reward quantity
-    reward.reward_Quantity -= 1;
-    updateRewardStatus(reward);
-    await reward.save();
-
-    // Store redemption details in RedeemReward table
-    const redemptionDate = new Date(); // Use current date as redemption date
-    await db.RedeemReward.create({
-        acc_id: acc_id,
-        reward_ID: id,
-        redeemReward_RedemptionDate: redemptionDate,
-        redeemReward_address: address // Address can be passed as part of the redeem request
-    });
-
-    return reward;
-}
-
-
 function validateRewardParams(params) {
     if (params.reward_Quantity < 0) {
         throw 'Quantity cannot be negative';
@@ -119,9 +91,18 @@ async function redeem(id, acc_id, address) {
 
     const reward = await getReward(id);
 
+    // Check if the account has enough points for the reward
+    if (account.acc_totalpoints < reward.reward_PointCost) {
+        throw 'Insufficient points to redeem the reward';
+    }
+
     if (reward.reward_Quantity <= 0 || reward.reward_Status === 'Inactive') {
         throw 'Reward is not available for redemption';
     }
+
+    // Deduct points from account first
+    account.acc_totalpoints -= reward.reward_PointCost; 
+    await account.save(); // Save the updated account points
 
     // Reduce reward quantity
     reward.reward_Quantity -= 1;
@@ -129,17 +110,17 @@ async function redeem(id, acc_id, address) {
     await reward.save();
 
     // Store redemption details in RedeemReward table
-    const redemptionDate = new Date(); // Use current date as redemption date
+    const redemptionDate = new Date();
     await db.RedeemReward.create({
         acc_id: acc_id,
         reward_ID: id,
         redeemReward_RedemptionDate: redemptionDate,
-        redeemReward_address: address // Address can be passed as part of the redeem request
+        redeemReward_address: address
     });
 
-    // Compose the email details
+    // Optionally send an email notification (if needed)
     const emailOptions = {
-        to: account.acc_email,  // Assuming the account has an email field
+        to: account.acc_email,
         subject: 'Reward Redeemed Successfully',
         html: `
             <p>Dear ${account.acc_firstname},</p>
@@ -149,8 +130,9 @@ async function redeem(id, acc_id, address) {
         `
     };
 
-    // Send email notification
     await sendEmail(emailOptions);
 
     return reward;
 }
+
+

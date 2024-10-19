@@ -21,7 +21,9 @@ module.exports = {
     getById,
     create,
     update,
+    updatePoints,
     delete: _delete
+
 };
 
 async function authenticate({ acc_email, acc_passwordHash, ipAddress }) {
@@ -328,4 +330,16 @@ function sendPasswordResetEmail(account, origin) {
 function basicDetails(account) {
     const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image } = account;
     return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image };
+}
+
+async function updatePoints(id, acc_totalpoints) {
+    const account = await getAccount(id);
+
+    // Update points
+    account.acc_totalpoints = acc_totalpoints;
+
+    // Save changes
+    await account.save();
+
+    return basicDetails(account);
 }

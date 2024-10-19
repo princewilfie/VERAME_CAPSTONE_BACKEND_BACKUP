@@ -8,7 +8,7 @@ function model(sequelize) {
         acc_lastname: { type: DataTypes.STRING, allowNull: false },
         acc_pnumber: { type: DataTypes.STRING, allowNull: true },
         acc_image: { type: DataTypes.STRING, allowNull: true }, // Set default image path
-        acc_totalpoints: { type: DataTypes.STRING, allowNull: true },
+        acc_totalpoints: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // Add default value 0
         acc_acceptTerms: { type: DataTypes.BOOLEAN },
         acc_role: { type: DataTypes.STRING, allowNull: false },
         acc_verificationToken: { type: DataTypes.STRING },
@@ -42,3 +42,5 @@ function model(sequelize) {
 }
 
 module.exports = model;
+
+

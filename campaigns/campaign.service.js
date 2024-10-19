@@ -1,5 +1,6 @@
-const db = require('_helpers/db');
+const db = require('_helpers/db'); // Adjust this path based on your project structure
 const path = require('path');
+const { Campaign } = require('./campaign.model'); // Ensure this path is correct
 
 module.exports = {
     create,
@@ -12,8 +13,6 @@ module.exports = {
     getByAccountId,
     getCampaignStatus,
     handleDonation
-
-
 };
 
 async function create(params, campaignImage, proofFiles) {
@@ -109,13 +108,10 @@ async function getCampaign(id) {
 
     return campaign;
 }
+
 async function getAll() {
-    return await db.Campaign.findAll();
+    return await db.Campaign.findAll(); // Fetch all campaigns
 }
-
-
-
-
 
 async function getById(id) {
     const campaign = await db.Campaign.findByPk(id); // Fetch campaign by ID
@@ -123,15 +119,15 @@ async function getById(id) {
     return campaign;
 }
 
-
 async function _delete(id) {
-    const campaign = await getById(id);
-    await campaign.destroy();
+    const campaign = await getById(id); // Fetch campaign by ID
+    await campaign.destroy(); // Delete campaign
 }
 
 async function getByAccountId(accountId) {
-    return await db.Campaign.findAll({ where: { Acc_ID: accountId } });
+    return await db.Campaign.findAll({ where: { Acc_ID: accountId } }); // Fetch campaigns by account ID
 }
+
 
 async function handleDonation(campaignId, amount) {
     const campaign = await getCampaign(campaignId);
@@ -149,6 +145,3 @@ async function handleDonation(campaignId, amount) {
 
     return campaign;
 }
-
-
-

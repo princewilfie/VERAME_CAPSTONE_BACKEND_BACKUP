@@ -19,6 +19,8 @@ router.post('/reset-password', resetPasswordSchema, resetPassword);
 router.get('/', authorize(Role.Admin), getAll);
 router.get('/:id', authorize(), getById);
 router.post('/', authorize(Role.Admin), createSchema, create);
+router.put('/:id/points', authorize(), updatePointsSchema, updatePoints);
+
 
 router.put('/:id', multer.single('acc_image'), (req, res, next) => {
     updateSchema(req, res, next);
@@ -276,5 +278,19 @@ function _delete(req, res, next) {
         .then(() => {
             res.json({ message: 'Account deleted successfully' });
         })
+        .catch(next);
+}
+
+
+function updatePointsSchema(req, res, next) {
+    const schema = Joi.object({
+        acc_totalpoints: Joi.number().required()
+    });
+    validateRequest(req, next, schema);
+}
+
+function updatePoints(req, res, next) {
+    accountService.updatePoints(req.params.id, req.body.acc_totalpoints)
+        .then(() => res.json({ message: 'Points updated successfully' }))
         .catch(next);
 }
