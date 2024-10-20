@@ -14,17 +14,18 @@ router.put('/reject', authorize('Admin'), rejectWithdrawal); // Changed to use b
 
 // Function to request a withdrawal
 function requestWithdrawal(req, res, next) {
-    const { Campaign_ID, acc_id } = req.body; // Get acc_id from the request body
+    const { Campaign_ID, acc_id, Acc_number, Bank_account } = req.body; // Include new fields
 
-    // Validate that both Campaign_ID and acc_id are provided
-    if (!Campaign_ID || !acc_id) {
-        return res.status(400).json({ message: 'Campaign ID and Account ID are required' });
+    // Validate that Campaign_ID, acc_id, Acc_number, and Bank_account are provided
+    if (!Campaign_ID || !acc_id || !Acc_number || !Bank_account) {
+        return res.status(400).json({ message: 'Campaign ID, Account ID, Account Number, and Bank Account are required' });
     }
 
-    withdrawService.requestWithdrawal(Campaign_ID, acc_id)  // Pass acc_id from the request body
+    withdrawService.requestWithdrawal(Campaign_ID, acc_id, Acc_number, Bank_account) // Pass new fields
         .then(withdrawal => res.json(withdrawal))
         .catch(next);
 }
+
 
 // Function to approve a withdrawal
 function approveWithdrawal(req, res, next) {
