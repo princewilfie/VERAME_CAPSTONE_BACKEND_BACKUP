@@ -87,8 +87,17 @@ async function _delete(id) {
 }
 
 async function getByAccountId(accountId) {
-    return await db.Event.findAll({ where: { Acc_ID: accountId } });
+    const events = await db.Event.findAll({
+        where: { Acc_ID: accountId },
+        include: [{
+            model: db.Account,
+            attributes: ['acc_firstname', 'acc_lastname'] // Add other fields as needed
+        }]
+    });
+    return events;
 }
+
+
 
 
 

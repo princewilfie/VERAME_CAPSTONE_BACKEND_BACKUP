@@ -121,9 +121,17 @@ function reject(req, res, next) {
 function getByAccountId(req, res, next) {
     const accountId = req.params.id;
     eventService.getByAccountId(accountId)
-        .then(events => res.json(events))
+        .then(events => {
+            const formattedEvents = events.map(event => ({
+                ...event.dataValues,
+                accountName: `${event.account.acc_firstname} ${event.account.acc_lastname}`,
+            }));
+            res.json(formattedEvents);
+        })
         .catch(next);
 }
+
+
 
 
 // join event 

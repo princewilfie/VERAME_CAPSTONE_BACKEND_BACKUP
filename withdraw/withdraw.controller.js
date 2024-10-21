@@ -12,6 +12,8 @@ router.put('/approve', authorize('Admin'), approveWithdrawal); // Changed to use
 // Route to reject a withdrawal (admin only)
 router.put('/reject', authorize('Admin'), rejectWithdrawal); // Changed to use body
 
+router.get('/all', authorize('Admin'), getAll); // Only admin can view all withdrawals
+
 // Function to request a withdrawal
 function requestWithdrawal(req, res, next) {
     const { Campaign_ID, acc_id, Acc_number, Bank_account } = req.body; // Include new fields
@@ -52,6 +54,12 @@ function rejectWithdrawal(req, res, next) {
 
     withdrawService.rejectWithdrawal(Withdraw_ID) // Pass Withdraw_ID from the body
         .then(withdrawal => res.json(withdrawal))
+        .catch(next);
+}
+
+function getAll(req, res, next) {
+    withdrawService.getAll()
+        .then(withdrawals => res.json(withdrawals))
         .catch(next);
 }
 

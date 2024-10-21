@@ -5,7 +5,8 @@ const sendEmail = require('_helpers/send-email');
 module.exports = {
     requestWithdrawal,
     approveWithdrawal,
-    rejectWithdrawal
+    rejectWithdrawal,
+    getAll
 };
 
 // Request a full withdrawal for a campaign
@@ -62,21 +63,42 @@ async function approveWithdrawal(id) {
     // Prepare email options
     const emailOptions = {
         to: account.acc_email,
-        subject: 'Withdrawal Request Approved',
+        subject: 'Your Withdrawal Request for Campaign: Approved!',
         html: `
-            <p>Dear ${account.acc_firstname},</p>
-            <p>Your withdrawal request for the campaign <strong>${campaign.Campaign_Name}</strong> has been approved.</p>
-            <p>Campaign Description: ${campaign.Campaign_Description}</p>
-            <p>Amount Withdrawn: ${withdrawal.Withdraw_Amount}</p>
-            <p>Bank Account: ${withdrawal.Bank_account}</p>
-            <p>Thank you for using our platform!</p>
+            <div style="font-family: Arial, sans-serif; color: #333;">
+                <h2 style="color: #5b9bd5;">Withdrawal Request Approved</h2>
+                <p>Dear ${account.acc_firstname} ${account.acc_lastname},</p>
+                <p>We're pleased to inform you that your withdrawal request has been <strong>approved</strong> for the campaign <strong>${campaign.Campaign_Name}</strong>.</p>
+                
+                <h4 style="color: #5b9bd5;">Campaign Details:</h4>
+                <ul style="line-height: 1.6;">
+                    <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
+                    <li><strong>Description:</strong> ${campaign.Campaign_Description}</li>
+                    <li><strong>Amount Withdrawn:</strong> ${withdrawal.Withdraw_Amount.toLocaleString()} ${withdrawal.currency || 'PHP'}</li>
+                    <li><strong>Bank Account:</strong> ${withdrawal.Bank_account}</li>
+                </ul>
+                
+                <p>The funds should be credited to your account within <strong>24 hours</strong>. Please note that processing times may vary depending on your bank or financial institution.</p>
+                
+                <h4 style="color: #5b9bd5;">Next Steps:</h4>
+                <p>We encourage you to log into your account to review the withdrawal details and monitor your campaign progress.</p>
+                
+                
+                
+                <p style="margin-top: 30px;">Thank you for being a valued member of our platform.</p>
+                
+                <hr style="border: none; border-top: 1px solid #ccc;">
+                <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:support@yourplatform.com">support@yourplatform.com</a>.</p>
+                <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
+            </div>
         `
     };
-
+    
     // Send email notification
     await sendEmail(emailOptions);
-
+    
     return withdrawal;
+    
 }
 
 
@@ -90,4 +112,20 @@ async function rejectWithdrawal(id) {
     await withdrawal.save();
 
     return withdrawal;
+}
+
+
+async function getAll() {
+    return await db.Withdraw.findAll({
+        include: [
+            {
+                model: db.Account,
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include account details
+            },
+            {
+                model: db.Campaign,
+                attributes: ['Campaign_Name', 'Campaign_Description'] // Include campaign details
+            }
+        ]
+    });
 }

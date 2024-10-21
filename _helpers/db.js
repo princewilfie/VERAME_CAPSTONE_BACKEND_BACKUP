@@ -32,9 +32,14 @@ async function initialize() {
     db.Account.hasMany(db.Campaign, { onDelete: 'CASCADE' });
     db.Campaign.belongsTo(db.Account);
 
+    //event
     db.Event = require('../events/event.model')(sequelize);
-    db.Account.hasMany(db.Event, { onDelete: 'CASCADE' });
-    db.Event.belongsTo(db.Account);
+
+    db.Account.hasMany(db.Event, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
+    db.Event.belongsTo(db.Account, { foreignKey: 'Acc_ID' });
+
+
+    
 
 
     //donation
