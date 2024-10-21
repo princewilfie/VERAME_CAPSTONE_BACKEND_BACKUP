@@ -34,7 +34,6 @@ async function initialize() {
 
     //event
     db.Event = require('../events/event.model')(sequelize);
-
     db.Account.hasMany(db.Event, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
     db.Event.belongsTo(db.Account, { foreignKey: 'Acc_ID' });
 
@@ -74,7 +73,7 @@ async function initialize() {
     db.EventParticipant.belongsTo(db.Event);  // A participant belongs to an event
 
     db.Account.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // A user can join many events
-    db.EventParticipant.belongsTo(db.Account);  // A participant belongs to an account
+    db.EventParticipant.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
 
     // Withdraw model
