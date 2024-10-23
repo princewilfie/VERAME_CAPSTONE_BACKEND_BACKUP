@@ -95,6 +95,13 @@ async function initialize() {
     db.Comment.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
 
+    // Like model
+    db.Like = require('../like/like.model')(sequelize);
+    db.Account.hasMany(db.Like, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
+    db.Like.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
+
+    db.Campaign.hasMany(db.Like, { foreignKey: 'Campaign_ID', onDelete: 'CASCADE' });
+    db.Like.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID' });
 
 
 

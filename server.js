@@ -54,6 +54,7 @@ app.use('/events', require('./events/event.controller'));
 app.use('/redeemReward', require('./redeemReward/redeemReward.controller'));
 app.use('/eventParticipant', require('./eventParticipant/eventParticipant.controller'));
 app.use('/comment', require('./comment/comments.controller')); // Separate comments route
+app.use('/like', require('./like/likes.controller')); // Add like route
 
 
 
