@@ -53,6 +53,7 @@ app.use('/rewards', require('./rewards/reward.controller'));
 app.use('/events', require('./events/event.controller')); 
 app.use('/redeemReward', require('./redeemReward/redeemReward.controller'));
 app.use('/eventParticipant', require('./eventParticipant/eventParticipant.controller'));
+app.use('/comment', require('./comment/comments.controller')); // Separate comments route
 
 
 
@@ -69,7 +70,6 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/uploads', express.static('uploads'));
 
 app.use('/withdraw', require('./withdraw/withdraw.controller'));
-
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;

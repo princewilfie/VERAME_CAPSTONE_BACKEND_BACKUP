@@ -84,6 +84,17 @@ async function initialize() {
     db.Withdraw.belongsTo(db.Account); // A withdrawal belongs to one account
     db.Campaign.hasMany(db.Withdraw, { onDelete: 'CASCADE' }); // A campaign can have multiple withdrawals
     db.Withdraw.belongsTo(db.Campaign); // A withdrawal belongs to one campaign
+    
+
+    // Comment relationships
+    db.Comment = require('../comment/comment.model')(sequelize);
+
+    db.Campaign.hasMany(db.Comment, { foreignKey: 'Campaign_ID', onDelete: 'CASCADE' });
+    db.Comment.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID' });
+    db.Account.hasMany(db.Comment, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
+    db.Comment.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
+
+
 
 
 
