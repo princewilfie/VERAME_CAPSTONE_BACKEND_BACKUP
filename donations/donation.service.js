@@ -128,19 +128,20 @@ async function createGcashPayment(paymentData) {
 
 
 // Handle payment success (ensure this function is called when webhook event is received)
-// Handle payment success (ensure this function is called when webhook event is received)
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
 
         console.log('Payment Data in handlePaymentSuccess:', paymentData);
 
+        const pointsEarned = Math.floor(amount / 100);  // Adjust the divisor for the conversion rate you want
+
         // Create the donation in the database
         const donation = await db.Donation.create({
             acc_id: accId,
             campaign_id: campaignId,
             donation_amount: amount,
-            donation_date: new Date(),  // You can add a date field if necessary
+            donation_date: new Date(),
             status: 'confirmed' // Assuming you have a status field for donations
         });
 
@@ -158,9 +159,22 @@ async function handlePaymentSuccess(paymentData) {
 
         console.log('Campaign updated successfully:', campaign);
 
+        // Fetch the account and update their total points
+        const account = await db.Account.findByPk(accId);
+        if (!account) {
+            throw new Error('Account not found');
+        }
+
+        // Add points to acc_totalpoints
+        account.acc_totalpoints += pointsEarned;
+        await account.save();
+
+        console.log(`Account ${account.acc_email} earned ${pointsEarned} points.`);
+
         return {
-            message: 'Donation confirmed and campaign updated successfully',
-            donation
+            message: 'Donation confirmed, campaign updated, and points added successfully',
+            donation,
+            pointsEarned
         };
 
     } catch (error) {
