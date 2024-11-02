@@ -30,12 +30,12 @@ async function initialize() {
     //campaign
     db.Campaign = require('../campaigns/campaign.model')(sequelize);
     db.Account.hasMany(db.Campaign, { onDelete: 'CASCADE' });
-    db.Campaign.belongsTo(db.Account);
+    db.Campaign.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
     //event
     db.Event = require('../events/event.model')(sequelize);
     db.Account.hasMany(db.Event, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
-    db.Event.belongsTo(db.Account, { foreignKey: 'Acc_ID' });
+    db.Event.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
 
     
@@ -45,8 +45,8 @@ async function initialize() {
     db.Donation = require('../donations/donation.model')(sequelize); 
     db.Account.hasMany(db.Donation, { onDelete: 'CASCADE' }); 
     db.Campaign.hasMany(db.Donation, { onDelete: 'CASCADE' });
-    db.Donation.belongsTo(db.Account); 
-    db.Donation.belongsTo(db.Campaign); 
+    db.Donation.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' }); 
+    db.Donation.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID', as: 'campaign' }); 
 
 
     // Rewards
@@ -70,7 +70,8 @@ async function initialize() {
 
     // Define relationships
     db.Event.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // An event can have many participants
-    db.EventParticipant.belongsTo(db.Event);  // A participant belongs to an event
+    db.EventParticipant.belongsTo(db.Event, {foreignKey: 'Event_ID', as: 'event'});  // A participant belongs to an event
+    
 
     db.Account.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // A user can join many events
     db.EventParticipant.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
@@ -80,10 +81,11 @@ async function initialize() {
     db.Withdraw = require('../withdraw/withdraw.model')(sequelize);
 
     // Set up relationships for Withdraw
-    db.Account.hasMany(db.Withdraw, { onDelete: 'CASCADE' }); // An account can make multiple withdrawals
-    db.Withdraw.belongsTo(db.Account); // A withdrawal belongs to one account
-    db.Campaign.hasMany(db.Withdraw, { onDelete: 'CASCADE' }); // A campaign can have multiple withdrawals
-    db.Withdraw.belongsTo(db.Campaign); // A withdrawal belongs to one campaign
+    db.Account.hasMany(db.Withdraw, { foreignKey: 'acc_id', onDelete: 'CASCADE' }); // An account can make multiple withdrawals
+    db.Withdraw.belongsTo(db.Account, { foreignKey: 'acc_id' }); // A withdrawal belongs to one account
+    db.Campaign.hasMany(db.Withdraw, { foreignKey: 'Campaign_ID', onDelete: 'CASCADE' }); // A campaign can have multiple withdrawals
+    db.Withdraw.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID' }); // A withdrawal belongs to one campaign
+
     
 
     // Comment relationships

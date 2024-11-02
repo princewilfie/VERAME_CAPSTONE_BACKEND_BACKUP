@@ -4,6 +4,7 @@ const Joi = require('joi');
 const validateRequest = require('_middleware/validate-request');
 const donationService = require('./donation.service');
 
+
 const Campaign = require('../campaigns/campaign.model');  // Import Campaign Model
 const { Sequelize } = require('../campaigns/campaign.model');  // Import Sequelize for transaction
 
@@ -16,6 +17,7 @@ router.post('/create', createSchema, create);
 
 // kani
 router.post('/create-gcash-payment', createGcashPaymentSchema, createGcashPayment);
+router.get('/campaign/:campaignId', getByCampaignId);
 
 
 // Success and Failure routes for PayMongo
@@ -103,6 +105,12 @@ function createGcashPaymentSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 
+function getByCampaignId(req, res, next) {
+    donationService.getByCampaignId(req.params.campaignId)
+        .then(donations => res.json(donations))
+        .catch(next);
+}
+
 // Handle GCASH payment initiation
 async function createGcashPayment(req, res, next) {
     try {
@@ -163,3 +171,4 @@ async function handlePaymentSuccess(req, res, next) {
         next(error);
     }
 }
+

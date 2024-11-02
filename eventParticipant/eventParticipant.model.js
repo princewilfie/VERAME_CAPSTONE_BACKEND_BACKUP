@@ -37,6 +37,18 @@ function model(sequelize) {
             get() {
                 return this.account ? this.account.acc_email : null;
             }
+        },
+        Event_Name: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.event ? this.event.Event_Name : null;
+            }
+        },
+        Event_Image: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.event ? this.event.Event_Image : null;
+            }
         }
     };
 
@@ -49,9 +61,14 @@ function model(sequelize) {
     // Associate EventParticipant with Account
     EventParticipant.associate = function(models) {
         EventParticipant.belongsTo(models.Account, { foreignKey: 'Acc_ID', as: 'account' });
+        EventParticipant.belongsTo(models.Event, { foreignKey: 'Event_ID', as: 'event' });
+
+
     };
 
     return EventParticipant;
 }
 
 module.exports = model;
+
+

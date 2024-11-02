@@ -24,7 +24,12 @@ async function joinEvent(accId, eventId) {
 async function getJoinedEvents(accId) {
     const participants = await db.EventParticipant.findAll({ 
         where: { Acc_ID: accId }, 
-        include: db.Event 
+        include: [{
+            model: db.Event,
+            as: 'event',
+            attributes: ['Event_Name', 'Event_Image']
+
+        }]
     });
     
     return participants.map(participant => ({

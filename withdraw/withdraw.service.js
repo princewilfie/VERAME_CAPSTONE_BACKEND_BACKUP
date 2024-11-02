@@ -1,7 +1,6 @@
 const db = require('_helpers/db');
 const sendEmail = require('_helpers/send-email');
 
-
 module.exports = {
     requestWithdrawal,
     approveWithdrawal,
@@ -33,7 +32,6 @@ async function requestWithdrawal(Campaign_ID, acc_id, Acc_number, Bank_account) 
     await withdrawal.save();
     return withdrawal;
 }
-
 
 // Approve the withdrawal (admin only)
 async function approveWithdrawal(id) {
@@ -83,8 +81,6 @@ async function approveWithdrawal(id) {
                 <h4 style="color: #5b9bd5;">Next Steps:</h4>
                 <p>We encourage you to log into your account to review the withdrawal details and monitor your campaign progress.</p>
                 
-                
-                
                 <p style="margin-top: 30px;">Thank you for being a valued member of our platform.</p>
                 
                 <hr style="border: none; border-top: 1px solid #ccc;">
@@ -98,10 +94,7 @@ async function approveWithdrawal(id) {
     await sendEmail(emailOptions);
     
     return withdrawal;
-    
 }
-
-
 
 // Reject the withdrawal (admin only)
 async function rejectWithdrawal(id) {
@@ -114,7 +107,7 @@ async function rejectWithdrawal(id) {
     return withdrawal;
 }
 
-
+// Get all withdrawal requests with associated account and campaign details
 async function getAll() {
     return await db.Withdraw.findAll({
         include: [

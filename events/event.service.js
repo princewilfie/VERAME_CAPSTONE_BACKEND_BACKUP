@@ -62,7 +62,15 @@ async function reject(id) {
 }
 
 async function getAll() {
-    return await db.Event.findAll();
+    return await db.Event.findAll({
+        include: [
+            {
+                model: db.Account,
+                as: 'account',
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include these fields
+            }
+        ]
+    });
 }
 
 async function getAllApproved() {
@@ -76,10 +84,19 @@ async function getAllApproved() {
 
 
 async function getById(id) {
-    const event = await db.Event.findByPk(id);
+    const event = await db.Event.findByPk(id, {
+        include: [
+            {
+                model: db.Account,
+                as: 'account',
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include these fields
+            }
+        ]
+    });
     if (!event) throw 'Event not found';
     return event;
 }
+
 
 async function _delete(id) {
     const event = await getById(id);
@@ -91,7 +108,8 @@ async function getByAccountId(accountId) {
         where: { Acc_ID: accountId },
         include: [{
             model: db.Account,
-            attributes: ['acc_firstname', 'acc_lastname'] // Add other fields as needed
+            as: 'account',
+            attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Add other fields as needed
         }]
     });
     return events;

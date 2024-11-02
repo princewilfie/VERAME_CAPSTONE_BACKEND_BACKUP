@@ -15,13 +15,40 @@ function model(sequelize) {
         Campaign_Image: { type: DataTypes.STRING, allowNull: true },
         Proof_Files: { type: DataTypes.TEXT, allowNull: true },
         Campaign_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
+        
+        // Virtual fields for account information
+        acc_firstname: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_firstname : null;
+            }
+        },
+        acc_lastname: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_lastname : null;
+            }
+        },
+        acc_email: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_email : null;
+            }
+        }
     };
 
     const options = {
         timestamps: false
     };
 
-    return sequelize.define('campaign', attributes, options);
+    const Campaign = sequelize.define('campaign', attributes, options);
+
+    // Define associations
+    Campaign.associate = function(models) {
+        Campaign.belongsTo(models.Account, { foreignKey: 'Acc_ID', as: 'account' });
+    };
+
+    return Campaign;
 }
 
 module.exports = model;

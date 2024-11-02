@@ -1,13 +1,14 @@
 const db = require('_helpers/db');
 const axios = require('axios');
-const apiKey = process.env.PAYMONGO_SECRET_KEY;  // Load from environment
-const encodedApiKey = Buffer.from(apiKey).toString('base64');  // Base64 encode it
+const apiKey = process.env.PAYMONGO_SECRET_KEY;
+const encodedApiKey = Buffer.from(apiKey).toString('base64');
 
 module.exports = {
     create,
     getAll,
     getById,
     createGcashPayment,
+    getByCampaignId,
     handlePaymentSuccess,
     updateCampaignRaisedAmount,
 };
@@ -18,7 +19,7 @@ async function create(req, res, next) {
         const { acc_id, campaign_id, donation_amount } = req.body;
 
         // Initiate the GCash payment
-        const paymentData = await donationService.createGcashPayment({
+        const paymentData = await createGcashPayment({
             amount: donation_amount,
             campaignId: campaign_id,
             accId: acc_id,
@@ -33,32 +34,50 @@ async function create(req, res, next) {
     }
 }
 
-
-// Get all donations
+// Get all donations with account and campaign details
 async function getAll() {
     try {
-        const donations = await db.Donation.findAll();
-        return donations.map(donation => basicDetails(donation));
+        const donations = await db.Donation.findAll({
+            include: [
+                {
+                    model: db.Account,
+                    as: 'account',
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                },
+                {
+                    model: db.Campaign,
+                    as: 'campaign',
+                    attributes: ['Campaign_Name']
+                }
+            ]
+        });
+
+        return donations.map(donation => detailedDonation(donation));
     } catch (error) {
         throw error;
     }
 }
 
-// Get donation by ID
+// Get donation by ID with account and campaign details
 async function getById(id) {
     try {
-        const donation = await getDonation(id);
-        return basicDetails(donation);
-    } catch (error) {
-        throw error;
-    }
-}
-
-async function getDonation(id) {
-    try {
-        const donation = await db.Donation.findByPk(id);
+        const donation = await db.Donation.findByPk(id, {
+            include: [
+                {
+                    model: db.Account,
+                    as: 'account',
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                },
+                {
+                    model: db.Campaign,
+                    as: 'campaign',
+                    attributes: ['Campaign_Name']
+                }
+            ]
+        });
         if (!donation) throw 'Donation not found';
-        return donation;
+
+        return detailedDonation(donation);
     } catch (error) {
         throw error;
     }
@@ -71,7 +90,7 @@ async function updateCampaignRaisedAmount(campaignId, amount, transaction) {
         if (!campaign) throw new Error('Campaign not found');
 
         campaign.Campaign_CurrentRaised += amount;
-        await campaign.save({ transaction });  // Ensure the campaign is saved within the transaction
+        await campaign.save({ transaction });
     } catch (error) {
         console.error('Error updating campaign raised amount:', error.message);
         throw error;
@@ -80,29 +99,41 @@ async function updateCampaignRaisedAmount(campaignId, amount, transaction) {
 
 // Basic donation details
 function basicDetails(donation) {
-    const { donation_id, acc_id, campaign_id, donation_amount, donation_date } = donation;
-    return { donation_id, acc_id, campaign_id, donation_amount, donation_date };
+    const { donation_id, acc_id, campaign_id, donation_amount, donation_date, status } = donation;
+    return { donation_id, acc_id, campaign_id, donation_amount, donation_date, status };
 }
 
+// Detailed donation with virtual fields
+function detailedDonation(donation) {
+    return {
+        donation_id: donation.donation_id,
+        acc_id: donation.acc_id,
+        campaign_id: donation.campaign_id,
+        donation_amount: donation.donation_amount,
+        donation_date: donation.donation_date,
+        status: donation.status,
+        acc_firstname: donation.account ? donation.account.acc_firstname : null,
+        acc_lastname: donation.account ? donation.account.acc_lastname : null,
+        acc_email: donation.account ? donation.account.acc_email : null,
+        Campaign_Name: donation.campaign ? donation.campaign.Campaign_Name : null
+    };
+}
 
 // Create GCASH payment
 async function createGcashPayment(paymentData) {
-
     console.log('Payment Data in createGcashPayment:', paymentData);
-
-    // Initiate the GCash payment
     handlePaymentSuccess(paymentData);
 
     try {
         const response = await axios.post(
-            'https://api.paymongo.com/v1/links',  // Correct endpoint
+            'https://api.paymongo.com/v1/links',
             {
                 data: {
                     attributes: {
-                        amount: paymentData.amount * 100,  // Amount in cents
+                        amount: paymentData.amount * 100,
                         description: paymentData.description,
                         remarks: paymentData.remarks,
-                        reference_number: paymentData.accId,  // Reference number field for GCash/PayMongo
+                        reference_number: paymentData.accId,
                         metadata: {
                             campaignId: paymentData.campaignId,
                         }
@@ -111,61 +142,46 @@ async function createGcashPayment(paymentData) {
             },
             {
                 headers: {
-                    Authorization: `Basic ${encodedApiKey}`,  // Correct API key
+                    Authorization: `Basic ${encodedApiKey}`,
                     'Content-Type': 'application/json',
                 }
             }
         );
 
-        return response.data.data.attributes;  // Return payment data
-        
+        return response.data.data.attributes;
     } catch (error) {
         console.error('Error in GCash payment initiation:', error.message);
         throw new Error('Payment initiation failed');
     }
 }
 
-
-
-// Handle payment success (ensure this function is called when webhook event is received)
+// Handle payment success
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
+        const pointsEarned = Math.floor(amount / 100);
 
-        console.log('Payment Data in handlePaymentSuccess:', paymentData);
-
-        const pointsEarned = Math.floor(amount / 100);  // Adjust the divisor for the conversion rate you want
-
-        // Create the donation in the database
         const donation = await db.Donation.create({
             acc_id: accId,
             campaign_id: campaignId,
             donation_amount: amount,
             donation_date: new Date(),
-            status: 'confirmed' // Assuming you have a status field for donations
+            status: 'confirmed'
         });
 
-        console.log('Donation confirmed:', donation);
-
-        // Fetch the associated campaign
         const campaign = await db.Campaign.findByPk(campaignId);
         if (!campaign) {
             throw new Error('Campaign not found');
         }
 
-        // Update the campaign's current raised amount
         campaign.Campaign_CurrentRaised += amount;
         await campaign.save();
 
-        console.log('Campaign updated successfully:', campaign);
-
-        // Fetch the account and update their total points
         const account = await db.Account.findByPk(accId);
         if (!account) {
             throw new Error('Account not found');
         }
 
-        // Add points to acc_totalpoints
         account.acc_totalpoints += pointsEarned;
         await account.save();
 
@@ -176,9 +192,34 @@ async function handlePaymentSuccess(paymentData) {
             donation,
             pointsEarned
         };
-
     } catch (error) {
         console.error('Error confirming donation:', error.message);
         throw new Error('Error confirming donation or updating campaign: ' + error.message);
+    }
+}
+
+
+// Fetch donations by campaign ID with account and campaign details
+async function getByCampaignId(campaignId) {
+    try {
+        const donations = await db.Donation.findAll({
+            where: { campaign_id: campaignId },
+            include: [
+                {
+                    model: db.Account,
+                    as: 'account',
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                },
+                {
+                    model: db.Campaign,
+                    as: 'campaign',
+                    attributes: ['Campaign_Name']
+                }
+            ]
+        });
+
+        return donations.map(donation => detailedDonation(donation));
+    } catch (error) {
+        throw error;
     }
 }

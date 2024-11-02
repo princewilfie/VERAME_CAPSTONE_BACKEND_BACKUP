@@ -110,14 +110,32 @@ async function getCampaign(id) {
 }
 
 async function getAll() {
-    return await db.Campaign.findAll(); // Fetch all campaigns
+    return await db.Campaign.findAll({
+        
+        include: [
+            {
+                model: db.Account,
+                as: 'account',
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+            }
+        ]
+    });
 }
 
 async function getById(id) {
-    const campaign = await db.Campaign.findByPk(id); // Fetch campaign by ID
+    const campaign = await db.Campaign.findByPk(id, {
+        include: [
+            {
+                model: db.Account,
+                as: 'account',
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+            }
+        ]
+    });
     if (!campaign) throw 'Campaign not found';
     return campaign;
 }
+
 
 async function _delete(id) {
     const campaign = await getById(id); // Fetch campaign by ID

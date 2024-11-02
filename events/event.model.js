@@ -11,7 +11,27 @@ function model(sequelize) {
         Event_Location: { type: DataTypes.STRING, allowNull: false },
         Event_Status: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0},
         Event_Image: { type: DataTypes.STRING, allowNull: true },
-        Event_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' }
+        Event_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
+
+
+        acc_firstname: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_firstname : null;
+            }
+        },
+        acc_lastname: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_lastname : null;
+            }
+        },
+        acc_email: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_email : null;
+            }
+        }
 
     };
 
@@ -19,7 +39,14 @@ function model(sequelize) {
         timestamps: false
     };
 
-    return sequelize.define('event', attributes, options);
+    const Event = sequelize.define('Event', attributes, options);
+
+    // Define associations
+    Event.associate = function(models) {
+        Event.belongsTo(models.Account, { foreignKey: 'Acc_ID', as: 'account' });
+    };
+
+    return Event;
 }
 
 module.exports = model;
