@@ -42,7 +42,7 @@ async function getAll() {
                 {
                     model: db.Account,
                     as: 'account',
-                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image']
                 },
                 {
                     model: db.Campaign,
@@ -66,7 +66,7 @@ async function getById(id) {
                 {
                     model: db.Account,
                     as: 'account',
-                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image']
                 },
                 {
                     model: db.Campaign,
@@ -115,6 +115,7 @@ function detailedDonation(donation) {
         acc_firstname: donation.account ? donation.account.acc_firstname : null,
         acc_lastname: donation.account ? donation.account.acc_lastname : null,
         acc_email: donation.account ? donation.account.acc_email : null,
+        acc_image: donation.account ? donation.account.acc_image : null, 
         Campaign_Name: donation.campaign ? donation.campaign.Campaign_Name : null
     };
 }

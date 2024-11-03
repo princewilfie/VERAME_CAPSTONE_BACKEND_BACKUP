@@ -29,6 +29,13 @@ function model(sequelize) {
             get() {
                 return this.campaign ? this.campaign.Campaign_Name : null;
             }
+        },
+        
+        acc_image: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_image : null;
+            }
         }
     };
 
