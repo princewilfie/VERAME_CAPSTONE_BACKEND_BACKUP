@@ -45,8 +45,8 @@ async function initialize() {
     db.Donation = require('../donations/donation.model')(sequelize); 
     db.Account.hasMany(db.Donation, { onDelete: 'CASCADE' }); 
     db.Campaign.hasMany(db.Donation, { onDelete: 'CASCADE' });
-    db.Donation.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' }); 
-    db.Donation.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID', as: 'campaign' }); 
+    db.Donation.belongsTo(db.Account, { foreignKey: 'acc_id', as: 'account' }); 
+    db.Donation.belongsTo(db.Campaign, { foreignKey: 'campaign_id', as: 'campaign' }); 
 
 
     // Rewards
@@ -105,6 +105,17 @@ async function initialize() {
     db.Campaign.hasMany(db.Like, { foreignKey: 'Campaign_ID', onDelete: 'CASCADE' });
     db.Like.belongsTo(db.Campaign, { foreignKey: 'Campaign_ID' });
 
+    
+    // Category
+    db.Category = require('../category/category.model')(sequelize); 
+    db.Category.hasMany(db.Campaign, { foreignKey: 'Category_ID', onDelete: 'SET NULL' });
+    db.Campaign.belongsTo(db.Category, { foreignKey: 'Category_ID', as: 'category' });
+
+    //Revenue
+    db.Revenue = require('../Revenue/revenue.model')(sequelize);
+    db.Donation.hasMany(db.Revenue, { foreignKey: 'donation_id', onDelete: 'CASCADE' });
+    db.Revenue.belongsTo(db.Donation, { foreignKey: 'donation_id', as: 'donation' });
+    db.Revenue.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
 
     await sequelize.sync();

@@ -111,7 +111,6 @@ function detailedDonation(donation) {
         campaign_id: donation.campaign_id,
         donation_amount: donation.donation_amount,
         donation_date: donation.donation_date,
-        status: donation.status,
         acc_firstname: donation.account ? donation.account.acc_firstname : null,
         acc_lastname: donation.account ? donation.account.acc_lastname : null,
         acc_email: donation.account ? donation.account.acc_email : null,
@@ -167,7 +166,6 @@ async function handlePaymentSuccess(paymentData) {
             campaign_id: campaignId,
             donation_amount: amount,
             donation_date: new Date(),
-            status: 'confirmed'
         });
 
         const campaign = await db.Campaign.findByPk(campaignId);
@@ -209,7 +207,7 @@ async function getByCampaignId(campaignId) {
                 {
                     model: db.Account,
                     as: 'account',
-                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+                    attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image']
                 },
                 {
                     model: db.Campaign,

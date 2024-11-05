@@ -171,4 +171,3 @@ async function handlePaymentSuccess(req, res, next) {
         next(error);
     }
 }
-

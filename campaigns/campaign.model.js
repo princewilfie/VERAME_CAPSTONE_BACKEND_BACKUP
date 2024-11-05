@@ -45,6 +45,7 @@ function model(sequelize) {
 
     // Define associations
     Campaign.associate = function(models) {
+        Campaign.belongsTo(models.Category, { foreignKey: 'Category_ID', as: 'category' });
         Campaign.belongsTo(models.Account, { foreignKey: 'Acc_ID', as: 'account' });
     };
 

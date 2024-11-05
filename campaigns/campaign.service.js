@@ -147,7 +147,7 @@ async function getByAccountId(accountId) {
 }
 
 
-async function handleDonation(campaignId, amount) {
+async function handleDonation(campaignId, amount, transaction) {
     const campaign = await getCampaign(campaignId);
     if (!campaign) throw 'Campaign not found';
 
@@ -159,7 +159,7 @@ async function handleDonation(campaignId, amount) {
 
     // Update campaign's raised amount
     campaign.Campaign_CurrentRaised = newRaisedAmount;
-    await campaign.save();
+    await campaign.save({ transaction });
 
     return campaign;
 }

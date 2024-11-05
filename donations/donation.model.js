@@ -9,7 +9,8 @@ function model(sequelize) {
         campaign_id: { type: DataTypes.INTEGER, allowNull: false },
         donation_amount: { type: DataTypes.FLOAT, allowNull: false },
         donation_date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-        status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'unpaid' },
+        fee_amount: { type: DataTypes.FLOAT, allowNull: true }, 
+
 
         // Virtual fields to fetch associated account and campaign data
         acc_firstname: {
