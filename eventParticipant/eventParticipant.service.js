@@ -3,7 +3,8 @@ const db = require('_helpers/db');
 module.exports = {
     joinEvent,
     getJoinedEvents,
-    getAllParticipants
+    getAllParticipants,
+    getAll
 };
 
 async function joinEvent(accId, eventId) {
@@ -50,3 +51,22 @@ async function getAllParticipants(eventId) {
 
     return participants; // The virtual fields will now be included in the response
 }
+
+async function getAll() {
+    const participants = await db.EventParticipant.findAll({
+        include: [
+            {
+                model: db.Account,
+                as: 'account',
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_image', 'acc_pnumber', 'acc_email']
+            },
+            {
+                model: db.Event,
+                as: 'event',
+                attributes: ['Event_Name', 'Event_Image']
+            }
+        ]
+    });
+
+    return participants.map(participant => participant.toJSON()); // Return JSON for cleaner response
+} 

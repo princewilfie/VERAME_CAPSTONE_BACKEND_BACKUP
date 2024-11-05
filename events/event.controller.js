@@ -29,7 +29,7 @@ router.put('/:id', multer.single('Event_Image'), (req, res, next) => {
 
 
 
-router.delete('/:id', authorize('Admin'), _delete);
+router.delete('/:id', _delete);
 
 router.put('/:id/approve', authorize('Admin'), approve);
 router.put('/:id/reject', authorize('Admin'), reject);

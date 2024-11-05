@@ -10,6 +10,7 @@ router.get('/account/:accId/joined', getJoinedEvents);
 
 // Route to get all participants for an event
 router.get('/event/:eventId/participants', getEventParticipants);
+router.get('/participants', getAll);
 
 module.exports = router;
 
@@ -32,6 +33,12 @@ function getJoinedEvents(req, res, next) {
 function getEventParticipants(req, res, next) {
     const eventId = req.params.eventId;
     eventParticipantService.getAllParticipants(eventId)
+        .then(participants => res.json(participants))
+        .catch(next);
+}
+
+function getAll(req, res, next) {
+    eventParticipantService.getAll()
         .then(participants => res.json(participants))
         .catch(next);
 }
