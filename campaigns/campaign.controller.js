@@ -131,7 +131,7 @@ function updateSchema(req, res, next) {
         Campaign_TargetFund: Joi.number().empty(''),
         Campaign_Start: Joi.date().empty(''),
         Campaign_End: Joi.date().empty(''),
-        Category_ID: Joi.string().required() // Add this line
+        Category_ID: Joi.string().empty('') // Add this line
 
     });
     validateRequest(req, next, schema);
