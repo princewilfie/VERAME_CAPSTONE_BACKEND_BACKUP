@@ -111,16 +111,21 @@ async function getCampaign(id) {
 
 async function getAll() {
     return await db.Campaign.findAll({
-        
         include: [
             {
                 model: db.Account,
                 as: 'account',
                 attributes: ['acc_firstname', 'acc_lastname', 'acc_email']
+            },
+            {
+                model: db.Category,
+                as: 'category',
+                attributes: ['Category_Name'] // Include only Category_Name
             }
         ]
     });
 }
+
 
 async function getById(id) {
     const campaign = await db.Campaign.findByPk(id, {

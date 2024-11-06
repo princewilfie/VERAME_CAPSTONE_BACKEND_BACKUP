@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 
 function model(sequelize) {
     const attributes = {
+        id: { 
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
         acc_email: { type: DataTypes.STRING, allowNull: false, unique: true },
         acc_passwordHash: { type: DataTypes.STRING, allowNull: false },
         acc_firstname: { type: DataTypes.STRING, allowNull: false },
@@ -15,7 +20,7 @@ function model(sequelize) {
         acc_verified: { type: DataTypes.DATE },
         acc_resetToken: { type: DataTypes.STRING },
         acc_resetTokenExpires: { type: DataTypes.DATE },
-        acc_status: { type: DataTypes.STRING, defaultValue: 'Active'},
+        acc_status: { type: DataTypes.STRING, defaultValue: 'Active' },
         acc_passwordReset: { type: DataTypes.DATE },
         acc_created: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
         acc_updated: { type: DataTypes.DATE },
@@ -34,7 +39,7 @@ function model(sequelize) {
             attributes: { exclude: ['acc_passwordHash'] }
         },
         scopes: {
-            withHash: { attributes: {}, }
+            withHash: { attributes: {} },
         }
     };
 
@@ -42,5 +47,3 @@ function model(sequelize) {
 }
 
 module.exports = model;
-
-
