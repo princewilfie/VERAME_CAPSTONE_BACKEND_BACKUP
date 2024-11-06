@@ -14,7 +14,7 @@ function model(sequelize) {
         final_amount: { type: DataTypes.FLOAT, allowNull: false },
         date_created: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
         tax: { type: DataTypes.FLOAT, allowNull: true },
-        // Virtual fields for associated account data
+        Campaign_ID: { type: DataTypes.INTEGER, allowNull: false },  // Add this line for Campaign_ID
        
     };
 
@@ -27,6 +27,8 @@ function model(sequelize) {
     // Define associations
     Revenue.associate = function(models) {
         Revenue.belongsTo(models.Donation, { foreignKey: 'donation_id', as: 'donation' });
+        Revenue.belongsTo(models.Account, { foreignKey: 'Acc_ID', as: 'account' });
+
     };
 
     return Revenue;

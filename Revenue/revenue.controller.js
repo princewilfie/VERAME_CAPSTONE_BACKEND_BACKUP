@@ -12,12 +12,13 @@ router.get('/', getAll);
 router.get('/:id', getById);
 router.put('/:id', updateSchema, update);
 router.delete('/:id', remove);
+router.get('/campaign/:campaignId', getByCampaignId);
 
 // Revenue creation schema validation
 function createSchema(req, res, next) {
     const schema = Joi.object({
         donation_id: Joi.number().required(),
-        
+        Campaign_ID: Joi.number().required()  // Add Campaign_ID as required
     });
     validateRequest(req, next, schema);
 }
@@ -31,9 +32,12 @@ function updateSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 
+// revenue.controller.js
+
+// In the create function
 async function create(req, res) {
     try {
-        const { donation_id } = req.body;
+        const { donation_id, Campaign_ID } = req.body;  // Destructure Campaign_ID from req.body
 
         // Fetch the donation details to populate the revenue fields
         const donation = await donationService.getById(donation_id);
@@ -42,13 +46,14 @@ async function create(req, res) {
         }
 
         // Calculate the fee and final amount based on your business logic
-        const fee_amount = donation.donation_amount * 0.10; // Example: 10% fee
+        const fee_amount = donation.donation_amount * 0.05; // Example: 10% fee
         const final_amount = donation.donation_amount - fee_amount;
         const tax = donation.donation_amount >= 250000 ? (final_amount * 0.05) : 0; // Example: 5% tax if above 250,000
 
-        // Create the revenue record
+        // Create the revenue record with Campaign_ID
         const revenue = await revenueService.createRevenue({
             donation_id,
+            Campaign_ID,  // Include Campaign_ID here
             amount: donation.donation_amount, // Set the amount from donation
             fee_amount,
             final_amount,
@@ -61,6 +66,7 @@ async function create(req, res) {
         res.status(400).json({ error: error.message });
     }
 }
+
 
 
 // Get all revenues
@@ -105,5 +111,16 @@ async function remove(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
+async function getByCampaignId(req, res) {
+    try {
+        const revenues = await revenueService.getRevenueByCampaignId(req.params.campaignId);
+        if (!revenues) return res.status(404).json({ message: 'No revenues found for this campaign' });
+        res.status(200).json(revenues);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 
 module.exports = router;

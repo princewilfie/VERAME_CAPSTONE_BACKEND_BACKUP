@@ -156,11 +156,16 @@ async function createGcashPayment(paymentData) {
 }
 
 // Handle payment success
+// Handle payment success
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
         const pointsEarned = Math.floor(amount / 100);
 
+        // Calculate the amount after deducting 5%
+        const amountAfterFee = amount * 0.95;
+
+        // Create a new donation record
         const donation = await db.Donation.create({
             acc_id: accId,
             campaign_id: campaignId,
@@ -173,7 +178,8 @@ async function handlePaymentSuccess(paymentData) {
             throw new Error('Campaign not found');
         }
 
-        campaign.Campaign_CurrentRaised += amount;
+        // Update the campaign's current raised amount after fee deduction
+        campaign.Campaign_CurrentRaised += amountAfterFee;
         await campaign.save();
 
         const account = await db.Account.findByPk(accId);
@@ -181,6 +187,7 @@ async function handlePaymentSuccess(paymentData) {
             throw new Error('Account not found');
         }
 
+        // Add points to the account based on the original donation amount
         account.acc_totalpoints += pointsEarned;
         await account.save();
 
@@ -196,6 +203,7 @@ async function handlePaymentSuccess(paymentData) {
         throw new Error('Error confirming donation or updating campaign: ' + error.message);
     }
 }
+
 
 
 // Fetch donations by campaign ID with account and campaign details

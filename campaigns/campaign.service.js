@@ -156,13 +156,16 @@ async function handleDonation(campaignId, amount, transaction) {
     const campaign = await getCampaign(campaignId);
     if (!campaign) throw 'Campaign not found';
 
+    // Calculate the amount after deducting the 5% fee
+    const amountAfterFee = amount * 0.95;
+
     // Ensure the donation does not exceed the target fund
-    const newRaisedAmount = campaign.Campaign_CurrentRaised + amount;
+    const newRaisedAmount = campaign.Campaign_CurrentRaised - amountAfterFee;
     if (newRaisedAmount > campaign.Campaign_TargetFund) {
         throw 'Donation exceeds target fund';
     }
 
-    // Update campaign's raised amount
+    // Update campaign's raised amount with the fee-deducted amount
     campaign.Campaign_CurrentRaised = newRaisedAmount;
     await campaign.save({ transaction });
 

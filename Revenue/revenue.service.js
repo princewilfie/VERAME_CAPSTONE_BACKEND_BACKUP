@@ -48,10 +48,36 @@ async function deleteRevenue(id) {
     return revenue;
 }
 
+// Add function to get revenue by Campaign_ID
+// Fetch revenues by Campaign ID in revenue.service.js
+async function getRevenueByCampaignId(campaignId) {
+    return await db.Revenue.findAll({
+        where: { Campaign_ID: campaignId },
+        include: [
+            {
+                model: db.Donation,
+                as: 'donation',
+                include: [
+                    { model: db.Account, as: 'account' }
+                ]
+            },
+            {
+                model: db.Campaign,
+                as: 'campaign'
+            }
+        ]
+    });
+}
+
+
+
+
 module.exports = {
     createRevenue,
     getAllRevenues,
     getRevenueById,
     updateRevenue,
-    deleteRevenue
+    deleteRevenue,
+    getRevenueByCampaignId,  // Expose the new function
+    
 };
