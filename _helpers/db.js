@@ -118,5 +118,26 @@ async function initialize() {
     db.Revenue.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
 
+    // EventLike model
+    db.EventLike = require('../eventLike/eventLike.model')(sequelize);
+    db.Account.hasMany(db.EventLike, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
+    db.EventLike.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
+
+    db.Event.hasMany(db.EventLike, { foreignKey: 'Event_ID', onDelete: 'CASCADE' });
+    db.EventLike.belongsTo(db.Event, { foreignKey: 'Event_ID' });
+
+
+    // eventComment model
+    db.EventComment = require('../eventComment/eventComment.model')(sequelize);
+
+    db.Event.hasMany(db.EventComment, { foreignKey: 'Event_ID', onDelete: 'CASCADE' });
+    db.EventComment.belongsTo(db.Event, { foreignKey: 'Event_ID' });
+
+    db.Account.hasMany(db.EventComment, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
+    db.EventComment.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
+
+
+
+
     await sequelize.sync();
 }

@@ -73,7 +73,9 @@ app.use('/uploads', express.static('uploads'));
 
 app.use('/withdraw', require('./withdraw/withdraw.controller'));
 
+app.use('/eventLike', require('./eventLike/eventLike.controller'));
 
+app.use('/eventComment', require('./eventComment/eventComment.controller'));
 
 
 

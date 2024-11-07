@@ -160,7 +160,7 @@ async function handleDonation(campaignId, amount, transaction) {
     const amountAfterFee = amount * 0.95;
 
     // Ensure the donation does not exceed the target fund
-    const newRaisedAmount = campaign.Campaign_CurrentRaised - amountAfterFee;
+    const newRaisedAmount = campaign.Campaign_CurrentRaised + amountAfterFee;
     if (newRaisedAmount > campaign.Campaign_TargetFund) {
         throw 'Donation exceeds target fund';
     }

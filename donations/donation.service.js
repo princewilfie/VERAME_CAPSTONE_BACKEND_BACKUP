@@ -156,7 +156,6 @@ async function createGcashPayment(paymentData) {
 }
 
 // Handle payment success
-// Handle payment success
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
