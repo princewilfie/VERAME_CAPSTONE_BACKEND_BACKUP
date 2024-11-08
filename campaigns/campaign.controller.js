@@ -47,6 +47,8 @@ router.put('/:id/reject', authorize('Admin'), reject);
 // Delete a campaign
 router.delete('/:id', _delete);
 
+router.get('/:id/proofs', authorize('Admin'), getProofFiles);
+router.get('/:id/notes', authorize('Admin'), getNotes);
 
 router.post('/:id/donate', async (req, res, next) => {
     const { amount } = req.body;
@@ -90,7 +92,8 @@ function createSchema(req, res, next) {
         Campaign_Start: Joi.date().required(),
         Campaign_End: Joi.date().required(),
         Campaign_Status: Joi.number().required(),
-        Category_ID: Joi.string().required() // Add this line
+        Category_ID: Joi.string().required(), // Add this line
+        Campaign_Notes: Joi.string().required()
 
     });
     validateRequest(req, next, schema);
@@ -99,12 +102,17 @@ function createSchema(req, res, next) {
 function create(req, res, next) {
     console.log('Files:', req.files); // Log files to verify
     const campaignImage = req.files.Campaign_Image ? req.files.Campaign_Image[0] : null;
-    const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
+
+    // Ensure proofFiles is always an array
+    const proofFiles = req.files.Proof_Files 
+        ? (Array.isArray(req.files.Proof_Files) ? req.files.Proof_Files : [req.files.Proof_Files])
+        : [];
 
     campaignService.create(req.body, campaignImage, proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
+
 
 function getAll(req, res, next) {
     campaignService.getAll()
@@ -131,7 +139,8 @@ function updateSchema(req, res, next) {
         Campaign_TargetFund: Joi.number().empty(''),
         Campaign_Start: Joi.date().empty(''),
         Campaign_End: Joi.date().empty(''),
-        Category_ID: Joi.string().empty('') // Add this line
+        Category_ID: Joi.string().empty(''),
+        Campaign_Notes: Joi.string().empty('')
 
     });
     validateRequest(req, next, schema);
@@ -140,19 +149,36 @@ function updateSchema(req, res, next) {
 function update(req, res, next) {
     console.log('Files:', req.files); // Log files to verify
     const campaignImage = req.files.Campaign_Image ? req.files.Campaign_Image[0] : null;
-    const proofFiles = req.files.Proof_Files ? req.files.Proof_Files.map(file => file.path) : [];
 
-     // Override status and approval fields
-     req.body.Campaign_Status = 0;  // Automatically set status to 0 (Pending)
-     req.body.Campaign_ApprovalStatus = 'Waiting For Approval';  // Automatically set approval status to 'Pending'
+    // Ensure proofFiles is always an array
+    const proofFiles = req.files.Proof_Files 
+        ? (Array.isArray(req.files.Proof_Files) ? req.files.Proof_Files.map(file => file.path) : [req.files.Proof_Files.path])
+        : [];
+
+    // Automatically set status and approval fields
+    req.body.Campaign_Status = 0;  // Set to 'Pending'
+    req.body.Campaign_ApprovalStatus = 'Waiting For Approval';
 
     campaignService.update(req.params.id, req.body, campaignImage, proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
 
+
 function _delete(req, res, next) {
     campaignService._delete(req.params.id)
         .then(() => res.json({ message: 'Campaign deleted successfully' }))
+        .catch(next);
+}
+
+function getProofFiles(req, res, next) {
+    campaignService.getProofFiles(req.params.id)
+        .then(proofFiles => res.json({ proofFiles }))
+        .catch(next);
+}
+
+function getNotes(req, res, next) {
+    campaignService.getNotes(req.params.id)
+        .then(notes => res.json({ notes }))
         .catch(next);
 }

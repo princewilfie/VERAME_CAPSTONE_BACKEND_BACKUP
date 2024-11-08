@@ -12,26 +12,27 @@ module.exports = {
     reject,
     getByAccountId,
     getCampaignStatus,
-    handleDonation
+    handleDonation,
+    getProofFiles,
+    getNotes
 };
 
 async function create(params, campaignImage, proofFiles) {
-    const defaultImagePath = path.basename('default-profile.png'); // Default image
-
-    // If campaignImage is provided, use its path, otherwise use default
+    const defaultImagePath = path.basename('default-profile.png');
     const imagePath = campaignImage ? path.basename(campaignImage.path) : defaultImagePath;
+    const proofImagePaths = proofFiles ? proofFiles.map(file => path.basename(file.path)) : [];
 
-    // Create new campaign with image and proof files
     const campaign = new db.Campaign({
         ...params,
         Campaign_Image: imagePath,
-        Proof_Files: JSON.stringify(proofFiles), // Convert proof files array to JSON string
+        Proof_Files: JSON.stringify(proofImagePaths),
         Campaign_ApprovalStatus: 'Waiting For Approval',
     });
 
     await campaign.save();
     return campaign;
 }
+
 
 async function update(id, params, campaignImage, proofFiles) {
     const campaign = await getCampaign(id);
@@ -96,8 +97,6 @@ function getCampaignStatus(campaign) {
 }
 
 
-
-
 async function getCampaign(id) {
     // Fetch the campaign from the database by ID
     const campaign = await db.Campaign.findByPk(id); // Adjust this to your model setup
@@ -160,7 +159,7 @@ async function handleDonation(campaignId, amount, transaction) {
     const amountAfterFee = amount * 0.95;
 
     // Ensure the donation does not exceed the target fund
-    const newRaisedAmount = campaign.Campaign_CurrentRaised + amountAfterFee;
+    const newRaisedAmount = campaign.Campaign_CurrentRaised - amountAfterFee;
     if (newRaisedAmount > campaign.Campaign_TargetFund) {
         throw 'Donation exceeds target fund';
     }
@@ -170,4 +169,30 @@ async function handleDonation(campaignId, amount, transaction) {
     await campaign.save({ transaction });
 
     return campaign;
+}
+
+async function getProofFiles(campaignId) {
+    // Fetch the campaign from the database
+    const campaign = await db.Campaign.findByPk(campaignId);
+    if (!campaign) {
+        throw new Error('Campaign not found');
+    }
+
+    // Parse the proof files from the database (assuming it's stored as a JSON string)
+    const proofFiles = JSON.parse(campaign.Proof_Files || '[]');
+    return proofFiles;
+}
+
+async function getNotes(campaignId) {
+    // Fetch campaign with specific attributes to ensure Campaign_Notes is returned
+    const campaign = await db.Campaign.findByPk(campaignId, {
+        attributes: ['Campaign_Notes'], // Check that this attribute exists in the model
+    });
+
+    if (!campaign) {
+        throw new Error('Campaign not found');
+    }
+
+    console.log('Fetched notes:', campaign.Campaign_Notes); // Debug log to verify data
+    return campaign.Campaign_Notes;
 }

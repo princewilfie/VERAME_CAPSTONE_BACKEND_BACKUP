@@ -2,6 +2,7 @@ const db = require('_helpers/db');
 const axios = require('axios');
 const apiKey = process.env.PAYMONGO_SECRET_KEY;
 const encodedApiKey = Buffer.from(apiKey).toString('base64');
+const sendEmail = require('_helpers/send-email');
 
 module.exports = {
     create,
@@ -156,13 +157,17 @@ async function createGcashPayment(paymentData) {
 }
 
 // Handle payment success
+// Handle payment success with dynamic fee based on donation amount
+// Handle payment success with dynamic fee based on donation amount
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
         const pointsEarned = Math.floor(amount / 100);
 
-        // Calculate the amount after deducting 5%
-        const amountAfterFee = amount * 0.95;
+        // Calculate the fee based on the amount threshold
+        const feePercentage = amount < 1000 ? 0.03 : 0.05;
+        const amountAfterFee = amount * (1 - feePercentage);
+        const donationDate = new Date().toLocaleDateString(); // Format donation date
 
         // Create a new donation record
         const donation = await db.Donation.create({
@@ -192,6 +197,39 @@ async function handlePaymentSuccess(paymentData) {
 
         console.log(`Account ${account.acc_email} earned ${pointsEarned} points.`);
 
+        // Send a donation receipt email
+        const emailOptions = {
+            to: account.acc_email,
+            subject: `Donation Receipt for Campaign: ${campaign.Campaign_Name}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #5b9bd5;">Donation Receipt</h2>
+                    <p>Dear ${account.acc_firstname} ${account.acc_lastname},</p>
+                    <p>Thank you for your generous donation of <strong>${amount.toLocaleString()} PHP</strong> to the campaign <strong>${campaign.Campaign_Name}</strong>.</p>
+                    
+                    <h4 style="color: #5b9bd5;">Donation Details:</h4>
+                    <ul style="line-height: 1.6;">
+                        <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
+                        <li><strong>Description:</strong> ${campaign.Campaign_Description}</li>
+                        <li><strong>Amount Donated:</strong> ${amount.toLocaleString()} PHP</li>
+                        <li><strong>Fee Percentage:</strong> ${(feePercentage * 100).toFixed(1)}%</li>
+                        <li><strong>Amount Credited to Campaign:</strong> ${amountAfterFee.toLocaleString()} PHP</li>
+                        <li><strong>Points Earned:</strong> ${pointsEarned}</li>
+                        <li><strong>Donation Date:</strong> ${donationDate}</li>
+                    </ul>
+                    
+                    <p>Your contribution makes a difference. We appreciate your support!</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #ccc;">
+                    <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:support@yourplatform.com">support@yourplatform.com</a>.</p>
+                    <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
+                </div>
+            `
+        };
+
+        // Send the email notification
+        await sendEmail(emailOptions);
+
         return {
             message: 'Donation confirmed, campaign updated, and points added successfully',
             donation,
@@ -202,8 +240,6 @@ async function handlePaymentSuccess(paymentData) {
         throw new Error('Error confirming donation or updating campaign: ' + error.message);
     }
 }
-
-
 
 // Fetch donations by campaign ID with account and campaign details
 async function getByCampaignId(campaignId) {
@@ -221,7 +257,10 @@ async function getByCampaignId(campaignId) {
                     as: 'campaign',
                     attributes: ['Campaign_Name']
                 }
-            ]
+            ],
+            
+            order: [['donation_date', 'DESC']]  // Sort by donation_date in descending order
+
         });
 
         return donations.map(donation => detailedDonation(donation));
@@ -229,3 +268,5 @@ async function getByCampaignId(campaignId) {
         throw error;
     }
 }
+
+
