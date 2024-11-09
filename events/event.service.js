@@ -1,5 +1,9 @@
 const db = require('_helpers/db');
 const path = require('path');
+const sendEmail = require('_helpers/send-email');
+
+
+
 
 module.exports = {
     create,
@@ -47,19 +51,68 @@ async function update(id, params, file) {
 
 async function approve(id) {
     const event = await getById(id);
-    event.Event_ApprovalStatus = 'Approved';  // Set to 'Approved'
+    event.Event_ApprovalStatus = 'Approved';
     event.Event_Status = 1;
     await event.save();
+
+    await sendEmail({
+        to: event.account.acc_email,
+        subject: 'Event Approved: Congratulations!',
+        text: `Your event "${event.Event_Name}" has been approved!`,
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <h2 style="color: #4CAF50;">Event Approval Notification</h2>
+                <p>Dear ${event.account.acc_firstname} ${event.account.acc_lastname},</p>
+                <p>We're excited to inform you that your event, "<strong>${event.Event_Name}</strong>," has been approved and is now live!</p>
+                <p><strong>Event Details:</strong></p>
+                <ul>
+                    <li><strong>Name:</strong> ${event.Event_Name}</li>
+                    <li><strong>Description:</strong> ${event.Event_Description}</li>
+                    <li><strong>Start Date:</strong> ${event.Event_Start_Date}</li>
+                    <li><strong>End Date:</strong> ${event.Event_End_Date}</li>
+                    <li><strong>Location:</strong> ${event.Event_Location}</li>
+                </ul>
+                <p>Thank you for creating an event that contributes to our community.</p>
+                <p style="color: #4CAF50; font-weight: bold;">Best Regards,<br>JuanBayan Team</p>
+            </div>
+        `
+    });
+
     return event;
 }
 
-async function reject(id) {
+async function reject(id, adminNotes) {
     const event = await getById(id);
-    event.Event_ApprovalStatus = 'Rejected';  // Set to 'Rejected'
+    event.Event_ApprovalStatus = 'Rejected';
     event.Event_Status = -1;
+    event.Admin_Notes = adminNotes; 
     await event.save();
+
+    await sendEmail({
+        to: event.account.acc_email,
+        subject: 'Event Rejection Notice',
+        text: `Your event "${event.Event_Name}" has been rejected.`,
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <h2 style="color: #e53935;">Event Rejection Notification</h2>
+                <p>Dear ${event.account.acc_firstname} ${event.account.acc_lastname},</p>
+                <p>We regret to inform you that your event, "<strong>${event.Event_Name}</strong>," has not been approved at this time.</p>
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px;">
+                    <h3>Event Summary</h3>
+                    <p><strong>Event Name:</strong> ${event.Event_Name}</p>
+                    <p><strong>Description:</strong> ${event.Event_Description}</p>
+                </div>
+                <p><strong>Admin Notes:</strong> ${adminNotes}</p> <!-- Display admin notes in the email -->
+                <p>If you have any questions or believe this was a mistake, please reach out to us for further assistance.</p>
+                <p>We appreciate your interest in creating events for the community and encourage you to try again.</p>
+                <p style="color: #e53935; font-weight: bold;">Sincerely,<br>JuanBayan Team</p>
+            </div>
+        `
+    });
+
     return event;
 }
+
 
 async function getAll() {
     return await db.Event.findAll({

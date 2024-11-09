@@ -15,6 +15,8 @@ function model(sequelize) {
         Proof_Files: { type: DataTypes.TEXT, allowNull: true },
         Campaign_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
         Campaign_Notes: { type: DataTypes.STRING, allowNull: true},
+        Admin_Notes: { type: DataTypes.STRING, allowNull: true }, 
+
         // Virtual fields for account information
         acc_firstname: {
             type: DataTypes.VIRTUAL,

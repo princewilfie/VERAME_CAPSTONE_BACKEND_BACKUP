@@ -12,6 +12,8 @@ function model(sequelize) {
         Event_Status: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0},
         Event_Image: { type: DataTypes.STRING, allowNull: true },
         Event_ApprovalStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
+        Admin_Notes: { type: DataTypes.STRING, allowNull: true }, 
+
 
 
         acc_firstname: {

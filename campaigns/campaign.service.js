@@ -1,6 +1,8 @@
 const db = require('_helpers/db'); // Adjust this path based on your project structure
 const path = require('path');
 const { Campaign } = require('./campaign.model'); // Ensure this path is correct
+const sendEmail = require('_helpers/send-email');
+
 
 module.exports = {
     create,
@@ -67,20 +69,72 @@ async function update(id, params, campaignImage, proofFiles) {
 
 // For Admin
 async function approve(id) {
-    const campaign = await getById(id); // Fetch campaign by ID
+    const campaign = await getById(id);
     campaign.Campaign_ApprovalStatus = 'Approved';
-    campaign.Campaign_Status = 1; // Set status to 'Active'
+    campaign.Campaign_Status = 1;
     await campaign.save();
+
+    // Send approval email with improved UI and content
+    await sendEmail({
+        to: campaign.account.acc_email,
+        subject: ' Your JuanBayan Campaign is Approved!',
+        text: `Your campaign "${campaign.Campaign_Name}" has been approved and is now live!`,
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+                <h2 style="color: #4CAF50;">🎉 To our benefeciary, ${campaign.account.acc_firstname}!</h2>
+                <p>Your campaign "<strong>${campaign.Campaign_Name}</strong>" has been approved and is now live on our platform!</p>
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px;">
+                    <h3>Campaign Details</h3>
+                    <p><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</p>
+                    <p><strong>Description:</strong> ${campaign.Campaign_Description}</p>
+                    <p><strong>Target Fund:</strong> $${campaign.Campaign_TargetFund}</p>
+                </div>
+                <p style="margin-top: 20px;">
+                    We’re thrilled to have your campaign on board! Feel free to share your campaign link with friends and supporters.
+                </p>
+                <p style="margin-top: 20px;">Best of luck,<br>The JuanBayan Team</p>
+            </div>`
+    });
+
     return campaign;
 }
 
-async function reject(id) {
-    const campaign = await getById(id); // Fetch campaign by ID
+
+async function reject(id, adminNotes) {
+    const campaign = await getById(id);
     campaign.Campaign_ApprovalStatus = 'Rejected';
-    campaign.Campaign_Status = 0; // Set status to 'Inactive'
+    campaign.Campaign_Status = 0;
+    campaign.Admin_Notes = adminNotes; // Save admin notes for rejection reason
     await campaign.save();
+
+    // Send rejection email with improved UI and content
+    await sendEmail({
+        to: campaign.account.acc_email,
+        subject: 'Campaign Submission Update',
+        text: `Unfortunately, your campaign "${campaign.Campaign_Name}" has not been approved.`,
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+                <h2 style="color: #FF6347;">Campaign Submission Update</h2>
+                <p>Dear ${campaign.account.acc_firstname},</p>
+                <p>We regret to inform you that your campaign "<strong>${campaign.Campaign_Name}</strong>" was not approved for publication on our platform.</p>
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px;">
+                    <h3>Campaign Summary</h3>
+                    <p><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</p>
+                    <p><strong>Description:</strong> ${campaign.Campaign_Description}</p>
+                </div>
+                <p><strong>Admin Notes:</strong> ${adminNotes}</p> <!-- Display admin notes in the email -->
+                <p style="margin-top: 20px;">
+                    Please review our guidelines or contact support for additional information on why the campaign was not approved. We're here to help you succeed!
+                </p>
+                <p style="margin-top: 20px;">Best regards,<br>The JuanBayan Team</p>
+            </div>`
+    });
+
     return campaign;
 }
+
+
+
 
 function getCampaignStatus(campaign) {
     if (campaign.Campaign_Status === 1) {

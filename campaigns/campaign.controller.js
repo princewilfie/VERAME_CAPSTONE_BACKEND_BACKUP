@@ -92,7 +92,7 @@ function createSchema(req, res, next) {
         Campaign_Start: Joi.date().required(),
         Campaign_End: Joi.date().required(),
         Campaign_Status: Joi.number().required(),
-        Category_ID: Joi.string().required(), // Add this line
+        Category_ID: Joi.string().required(), 
         Campaign_Notes: Joi.string().required()
 
     });
