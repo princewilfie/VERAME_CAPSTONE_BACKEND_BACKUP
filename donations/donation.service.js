@@ -12,6 +12,8 @@ module.exports = {
     getByCampaignId,
     handlePaymentSuccess,
     updateCampaignRaisedAmount,
+    getFeeAmounts
+    
 };
 
 // Create donation
@@ -112,6 +114,7 @@ function detailedDonation(donation) {
         campaign_id: donation.campaign_id,
         donation_amount: donation.donation_amount,
         donation_date: donation.donation_date,
+        fee_amount: donation.fee_amount,
         acc_firstname: donation.account ? donation.account.acc_firstname : null,
         acc_lastname: donation.account ? donation.account.acc_lastname : null,
         acc_email: donation.account ? donation.account.acc_email : null,
@@ -157,8 +160,6 @@ async function createGcashPayment(paymentData) {
 }
 
 // Handle payment success
-// Handle payment success with dynamic fee based on donation amount
-// Handle payment success with dynamic fee based on donation amount
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
@@ -166,7 +167,8 @@ async function handlePaymentSuccess(paymentData) {
 
         // Calculate the fee based on the amount threshold
         const feePercentage = amount < 1000 ? 0.03 : 0.05;
-        const amountAfterFee = amount * (1 - feePercentage);
+        const feeAmount = amount * feePercentage;
+        const amountAfterFee = amount - feeAmount;
         const donationDate = new Date().toLocaleDateString(); // Format donation date
 
         // Create a new donation record
@@ -174,6 +176,7 @@ async function handlePaymentSuccess(paymentData) {
             acc_id: accId,
             campaign_id: campaignId,
             donation_amount: amount,
+            fee_amount: feeAmount,  
             donation_date: new Date(),
         });
 
@@ -270,3 +273,19 @@ async function getByCampaignId(campaignId) {
 }
 
 
+async function getFeeAmounts() {
+    try {
+        const feeAmounts = await db.Donation.findAll({
+            attributes: ['donation_id', 'fee_amount']
+        });
+
+        const totalFeeAmount = feeAmounts.reduce((total, { fee_amount }) => total + fee_amount, 0);
+
+        return {
+            totalFeeAmount,
+            feeAmounts: feeAmounts.map(({ donation_id, fee_amount }) => ({ donation_id, fee_amount }))
+        };
+    } catch (error) {
+        throw error;
+    }
+}

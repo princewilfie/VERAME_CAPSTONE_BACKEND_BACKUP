@@ -11,6 +11,7 @@ const { Sequelize } = require('../campaigns/campaign.model');  // Import Sequeli
 
 // routes
 router.get('/', getAll);
+router.get('/fees', getFeeAmounts); 
 router.get('/:id', getById);
 router.post('/create', createSchema, create);
 
@@ -22,6 +23,9 @@ router.get('/campaign/:campaignId', getByCampaignId);
 
 // Success and Failure routes for PayMongo
 router.get('/success', handlePaymentSuccess);
+
+
+
 
 
 module.exports = router;
@@ -170,4 +174,10 @@ async function handlePaymentSuccess(req, res, next) {
         await transaction.rollback();
         next(error);
     }
+}
+
+function getFeeAmounts(req, res, next) {
+    donationService.getFeeAmounts()
+        .then(({ totalFeeAmount, feeAmounts }) => res.json({ totalFeeAmount, feeAmounts }))
+        .catch(next);
 }
