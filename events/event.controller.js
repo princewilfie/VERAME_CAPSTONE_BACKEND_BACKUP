@@ -113,10 +113,12 @@ function approve(req, res, next) {
 }
 
 function reject(req, res, next) {
-    eventService.reject(req.params.id)
+    const adminNotes = req.body.adminNotes; // Get admin notes from the request body
+    eventService.reject(req.params.id, adminNotes)
         .then(event => res.json(event))
         .catch(next);
 }
+
 
 function getByAccountId(req, res, next) {
     const accountId = req.params.id;

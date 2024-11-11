@@ -102,9 +102,16 @@ async function approve(id) {
 
 async function reject(id, adminNotes) {
     const campaign = await getById(id);
+    if (!campaign) {
+        throw new Error('Campaign not found');
+    }
+
+    // Update campaign details
     campaign.Campaign_ApprovalStatus = 'Rejected';
     campaign.Campaign_Status = 0;
     campaign.Admin_Notes = adminNotes; // Save admin notes for rejection reason
+
+    // Save changes to the database
     await campaign.save();
 
     // Send rejection email with improved UI and content
@@ -132,6 +139,7 @@ async function reject(id, adminNotes) {
 
     return campaign;
 }
+
 
 
 

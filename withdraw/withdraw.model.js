@@ -5,11 +5,12 @@ function model(sequelize) {
         Withdraw_ID: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
         Campaign_ID: { type: DataTypes.INTEGER, allowNull: false },
         acc_id: { type: DataTypes.INTEGER, allowNull: false },
-        Acc_number: { type: DataTypes.STRING, allowNull: false },  // Add Acc_number field
-        Bank_account: { type: DataTypes.STRING, allowNull: false },  // Add Bank_account field
+        Acc_number: { type: DataTypes.STRING, allowNull: false },  
+        Bank_account: { type: DataTypes.STRING, allowNull: false },  
         Withdraw_Amount: { type: DataTypes.FLOAT, allowNull: false },
         Status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Pending' },
         Request_Date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+        Testimony: { type: DataTypes.STRING, allowNull: true },  
 
         // Virtual fields for associated account
         acc_firstname: {
@@ -28,6 +29,12 @@ function model(sequelize) {
             type: DataTypes.VIRTUAL,
             get() {
                 return this.account ? this.account.acc_email : null;
+            }
+        },
+        acc_image: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_image : null;
             }
         }
     };

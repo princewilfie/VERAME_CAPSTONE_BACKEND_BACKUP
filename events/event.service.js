@@ -85,9 +85,10 @@ async function reject(id, adminNotes) {
     const event = await getById(id);
     event.Event_ApprovalStatus = 'Rejected';
     event.Event_Status = -1;
-    event.Admin_Notes = adminNotes; 
+    event.Admin_Notes = adminNotes; // Set admin notes
     await event.save();
 
+    // Notify the user about the rejection via email
     await sendEmail({
         to: event.account.acc_email,
         subject: 'Event Rejection Notice',

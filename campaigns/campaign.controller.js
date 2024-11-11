@@ -78,7 +78,8 @@ function approve(req, res, next) {
 
 // Function to reject a campaign
 function reject(req, res, next) {
-    campaignService.reject(req.params.id)
+    const adminNotes = req.body.Admin_Notes; // Extract admin notes from the request body
+    campaignService.reject(req.params.id, adminNotes)
         .then(campaign => res.json(campaign))
         .catch(next);
 }

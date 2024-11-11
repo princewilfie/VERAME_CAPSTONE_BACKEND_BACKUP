@@ -1,11 +1,13 @@
 const db = require('_helpers/db');
 const sendEmail = require('_helpers/send-email');
+const { required } = require('joi');
 
 module.exports = {
     requestWithdrawal,
     approveWithdrawal,
     rejectWithdrawal,
-    getAll
+    getAll,
+    submitTestimony
 };
 
 // Request a full withdrawal for a campaign
@@ -79,6 +81,7 @@ async function approveWithdrawal(id) {
                 <p>The funds should be credited to your account within <strong>24 hours</strong>. Please note that processing times may vary depending on your bank or financial institution.</p>
                 
                 <h4 style="color: #5b9bd5;">Next Steps:</h4>
+                <p>You are now able to submit a testimony about your experience with the campaign and how JuanBayan helped you. Please log into your account to submit your testimony.</p>
                 <p>We encourage you to log into your account to review the withdrawal details and monitor your campaign progress.</p>
                 
                 <p style="margin-top: 30px;">Thank you for being a valued member of our platform.</p>
@@ -113,12 +116,42 @@ async function getAll() {
         include: [
             {
                 model: db.Account,
-                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include account details
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'],
+                required: true
             },
             {
                 model: db.Campaign,
-                attributes: ['Campaign_Name', 'Campaign_Description'] // Include campaign details
+                attributes: ['Campaign_Name', 'Campaign_Description'] 
             }
         ]
     });
 }
+
+
+async function submitTestimony(Withdraw_ID, testimony) {
+    // Find the withdrawal, including the associated Account
+    const withdrawal = await db.Withdraw.findByPk(Withdraw_ID, {
+        include: [
+            {
+                model: db.Account,
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image'], 
+                required: true 
+            }
+        ]
+    });
+
+    if (!withdrawal) throw 'Withdrawal not found';
+
+    // Check if the withdrawal has already been approved
+    if (withdrawal.Status !== 'Approved') {
+        throw 'Testimony can only be submitted for approved withdrawals';
+    }
+
+    // Update the testimony field
+    withdrawal.Testimony = testimony;
+    await withdrawal.save();
+
+    // Return the withdrawal with the account details
+    return withdrawal;
+}
+

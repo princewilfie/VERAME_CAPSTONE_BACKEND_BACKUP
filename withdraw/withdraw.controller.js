@@ -14,6 +14,9 @@ router.put('/reject', authorize('Admin'), rejectWithdrawal); // Changed to use b
 
 router.get('/all', authorize('Admin'), getAll); // Only admin can view all withdrawals
 
+router.put('/submit-testimony', authorize(), submitTestimony);
+
+
 // Function to request a withdrawal
 function requestWithdrawal(req, res, next) {
     const { Campaign_ID, acc_id, Acc_number, Bank_account } = req.body; // Include new fields
@@ -60,6 +63,19 @@ function rejectWithdrawal(req, res, next) {
 function getAll(req, res, next) {
     withdrawService.getAll()
         .then(withdrawals => res.json(withdrawals))
+        .catch(next);
+}
+
+function submitTestimony(req, res, next) {
+    const { Withdraw_ID, testimony } = req.body;  // Get Withdraw_ID and Testimony from request body
+
+    // Validate that Withdraw_ID and Testimony are provided
+    if (!Withdraw_ID || !testimony) {
+        return res.status(400).json({ message: 'Withdraw ID and testimony are required' });
+    }
+
+    withdrawService.submitTestimony(Withdraw_ID, testimony)  // Pass to the service
+        .then(withdrawal => res.json(withdrawal))
         .catch(next);
 }
 

@@ -8,6 +8,7 @@ const sendEmail = require('_helpers/send-email');
 const path = require('path');
 
 
+
 module.exports = {
     authenticate,
     refreshToken,
@@ -22,7 +23,9 @@ module.exports = {
     create,
     update,
     updatePoints,
-    delete: _delete
+    delete: _delete,
+    getAccountActivities 
+
 
 };
 
@@ -343,3 +346,90 @@ async function updatePoints(id, acc_totalpoints) {
 
     return basicDetails(account);
 }
+
+async function getAccountActivities(acc_id) {
+    try {
+        const [donations, events, campaigns, eventParticipants] = await Promise.all([
+            db.Donation.findAll({
+                where: { Acc_ID: acc_id },
+                order: [['donation_date', 'DESC']], 
+                attributes: ['Acc_ID', 'donation_amount', 'donation_date'],
+                include: [
+                    {
+                        model: db.Account, 
+                        as: 'account', 
+                        required: true, 
+                        attributes: ['acc_firstname', 'acc_lastname'], 
+                    }
+                ]
+            }),
+            db.Event.findAll({
+                where: { Acc_ID: acc_id },
+                order: [['Event_Start_Date', 'DESC']], 
+                attributes: ['Acc_ID', 'event_name', 'Event_Start_Date'],
+                include: [
+                    {
+                        model: db.Account, 
+                        as: 'account', 
+                        required: true, 
+                        attributes: ['acc_firstname', 'acc_lastname'], 
+                    }
+                ]
+            }),
+            db.Campaign.findAll({
+                where: { Acc_ID: acc_id },
+                order: [['Campaign_Start', 'DESC']], 
+                attributes: ['Acc_ID', 'Campaign_Name', 'Campaign_Description', 'Campaign_Start'],
+                include: [
+                    {
+                        model: db.Account, 
+                        as: 'account',
+                        required: true, 
+                        attributes: ['acc_firstname', 'acc_lastname'], 
+                    }
+                ]
+            }),
+            db.EventParticipant.findAll({
+                where: { Acc_ID: acc_id },
+                order: [['joinedAt', 'DESC']], 
+                attributes: ['Acc_ID', 'Event_ID', 'joinedAt'],
+                include: [
+                    {
+                        model: db.Event, 
+                        as: 'event', 
+                        required: true, 
+                        attributes: ['Event_Name'], 
+                    },
+                    {
+                        model: db.Account, 
+                        as: 'account', 
+                        required: true, 
+                        attributes: ['acc_firstname', 'acc_lastname'], 
+                    }
+                ]
+            })
+            
+        ]);
+
+        // Merge all activities into a single array with proper type labeling
+        const allActivities = [
+            ...donations.map(d => ({ type: 'Donation', ...d.get({ plain: true }) })),
+            ...events.map(e => ({ type: 'Event', ...e.get({ plain: true }) })),
+            ...campaigns.map(c => ({ type: 'Campaign', ...c.get({ plain: true }) })),
+            ...eventParticipants.map(ep => ({ type: 'EventParticipant', ...ep.get({ plain: true }) }))
+        ];
+
+        // Sort by the most recent activity, using the most recent createdAt (if present)
+        allActivities.sort((a, b) => new Date(b.created_at || b.event_date || b.Campaign_Start) - new Date(a.created_at || a.event_date || a.Campaign_Start));
+
+        return allActivities;
+    } catch (error) {
+        console.error('Error in getAccountActivities:', error);
+        throw error;
+    }
+}
+
+
+
+
+

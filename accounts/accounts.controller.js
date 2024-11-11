@@ -30,6 +30,9 @@ router.put('/:id', multer.single('acc_image'), (req, res, next) => {
 
 router.delete('/:id', authorize(), _delete);
 
+router.get('/:id/activities', authorize(), getAccountActivitiesController);
+
+
 
 
 module.exports = router;
@@ -293,4 +296,25 @@ function updatePoints(req, res, next) {
     accountService.updatePoints(req.params.id, req.body.acc_totalpoints)
         .then(() => res.json({ message: 'Points updated successfully' }))
         .catch(next);
+}
+
+// Controller function to get account activities in descending order
+async function getAccountActivitiesController(req, res, next) {
+    const { id } = req.params; // Account ID is passed as a URL parameter
+
+    try {
+        const activities = await accountService.getAccountActivities(id);
+        res.status(200).json({
+            success: true,
+            message: 'Account activities retrieved successfully',
+            data: activities
+        });
+    } catch (error) {
+        console.error('Error fetching account activities:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve account activities',
+            error: error.message
+        });
+    }
 }
