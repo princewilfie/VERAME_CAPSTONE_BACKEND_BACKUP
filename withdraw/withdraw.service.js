@@ -54,6 +54,10 @@ async function approveWithdrawal(id) {
 
     // Deduct the full amount from the campaign's raised funds
     campaign.Campaign_CurrentRaised = 0; // Set to zero after withdrawal
+
+    campaign.Campaign_ApprovalStatus = 'Done';
+
+    campaign.Campaign_Status = 3; // Set campaign status to "Done"
     await campaign.save();
 
     // Fetch the user's account to get email information
@@ -117,7 +121,6 @@ async function getAll() {
             {
                 model: db.Account,
                 attributes: ['acc_firstname', 'acc_lastname', 'acc_email'],
-                required: true
             },
             {
                 model: db.Campaign,

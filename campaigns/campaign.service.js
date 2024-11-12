@@ -145,11 +145,14 @@ async function reject(id, adminNotes) {
 
 
 function getCampaignStatus(campaign) {
-    if (campaign.Campaign_Status === 1) {
+    if (campaign.Campaign_Status === 3) {
+        campaign.Campaign_ApprovalStatus = 'Done';
+        campaign.Campaign_Status = 'Done';
+    } else if (campaign.Campaign_Status === 1) {
         campaign.Campaign_ApprovalStatus = 'Approved';
         campaign.Campaign_Status = 'Active';
     } else if (campaign.Campaign_Status === 0) {
-        campaign.Campaign_ApprovalStatus = 'Waiting For Approval'; // Change to 'Inactive' instead of 'Rejected'
+        campaign.Campaign_ApprovalStatus = 'Waiting For Approval';
         campaign.Campaign_Status = 'Inactive';
     } else if (campaign.Campaign_Status === 2) {
         campaign.Campaign_ApprovalStatus = 'Rejected';
@@ -157,6 +160,7 @@ function getCampaignStatus(campaign) {
     }
     return campaign;
 }
+
 
 
 async function getCampaign(id) {
