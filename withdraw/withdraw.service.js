@@ -7,7 +7,8 @@ module.exports = {
     approveWithdrawal,
     rejectWithdrawal,
     getAll,
-    submitTestimony
+    submitTestimony,
+    getWithdrawByCampaignId
 };
 
 // Request a full withdrawal for a campaign
@@ -120,7 +121,7 @@ async function getAll() {
         include: [
             {
                 model: db.Account,
-                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'],
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email' , 'acc_image'],
             },
             {
                 model: db.Campaign,
@@ -158,3 +159,26 @@ async function submitTestimony(Withdraw_ID, testimony) {
     return withdrawal;
 }
 
+async function getWithdrawByCampaignId(campaignId) {
+    // Fetch all withdrawals that are associated with the given Campaign_ID
+    const withdrawals = await db.Withdraw.findAll({
+        where: { Campaign_ID: campaignId },
+        include: [
+            {
+                model: db.Account,
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image'], 
+                required: true 
+            },
+            {
+                model: db.Campaign,
+                attributes: ['Campaign_Name', 'Campaign_Description']
+            }
+        ]
+    });
+
+    if (withdrawals.length === 0) {
+        throw 'No withdrawals found for this campaign';
+    }
+
+    return withdrawals; 
+}

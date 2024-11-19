@@ -16,7 +16,7 @@ router.post('/verify-email', verifyEmailSchema, verifyEmail);
 router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
 router.post('/reset-password', resetPasswordSchema, resetPassword);
-router.get('/', authorize(Role.Admin), getAll);
+router.get('/', /*authorize(Role.Admin),*/ getAll);
 router.get('/:id', authorize(), getById);
 router.post('/', authorize(Role.Admin), createSchema, create);
 router.put('/:id/points', authorize(), updatePointsSchema, updatePoints);
@@ -129,6 +129,7 @@ function registerSchema(req, res, next) {
         acc_firstname: Joi.string().required(),
         acc_lastname: Joi.string().required(),
         acc_pnumber: Joi.string().required(),
+        acc_type: Joi.string().valid('Donor', 'Beneficiary', 'Admin').required(),
         confirmPassword: Joi.string().valid(Joi.ref('acc_passwordHash')).required(),
         acc_acceptTerms: Joi.boolean().valid(true).required()
         
@@ -138,13 +139,13 @@ function registerSchema(req, res, next) {
 
 function register(req, res, next) {
     // Access file information from req.file
-    const { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role } = req.body;
+    const { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, acc_type } = req.body;
     const acc_image = req.file ? path.basename(req.file.path) : 'default-image.png'; // Change null to 'default-image.png'
 
 
     
 
-    const body = { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, acc_image };
+    const body = { acc_email, acc_passwordHash, acc_firstname, acc_lastname, acc_pnumber, acc_totalpoints, acc_role, acc_image, acc_type };
 
     accountService.register(body, req.get('origin'))
         .then(() => {
@@ -239,6 +240,7 @@ function createSchema(req, res, next) {
         acc_pnumber: Joi.string().required(),
         confirmPassword: Joi.string().valid(Joi.ref('acc_passwordHash')).required(),
         role: Joi.string().valid(Role.Admin, Role.User).required(),
+        acc_type: Joi.string().valid('Donor', 'Beneficiary', 'Admin').required(),
     });
     validateRequest(req, next, schema);
 }
@@ -261,6 +263,7 @@ function updateSchema(req, res, next) {
         acc_totalpoints: Joi.number().empty(''),
         acc_role: Joi.string().empty(''), 
         acc_status: Joi.string().empty(''), 
+        acc_type: Joi.string().empty(''),
     });
     validateRequest(req, next, schema);
 }

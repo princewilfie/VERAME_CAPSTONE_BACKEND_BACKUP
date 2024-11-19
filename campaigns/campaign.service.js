@@ -2,7 +2,7 @@ const db = require('_helpers/db'); // Adjust this path based on your project str
 const path = require('path');
 const { Campaign } = require('./campaign.model'); // Ensure this path is correct
 const sendEmail = require('_helpers/send-email');
-
+const { Op } = require('sequelize');
 
 module.exports = {
     create,
@@ -16,13 +16,36 @@ module.exports = {
     getCampaignStatus,
     handleDonation,
     getProofFiles,
-    getNotes
+    getNotes,
+    getAllApproved
 };
+
 
 async function create(params, campaignImage, proofFiles) {
     const defaultImagePath = path.basename('default-profile.png');
     const imagePath = campaignImage ? path.basename(campaignImage.path) : defaultImagePath;
     const proofImagePaths = proofFiles ? proofFiles.map(file => path.basename(file.path)) : [];
+
+    const accId = params.Acc_ID;
+
+    // Get the start and end of the current month
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+    // Count all campaigns for the user this month
+    const campaignCount = await db.Campaign.count({
+        where: {
+            Acc_ID: accId,
+            createdAt: {
+                [Op.between]: [startOfMonth, endOfMonth],
+            }
+        }
+    });
+
+    // Check if the limit of 3 campaigns has been reached
+    if (campaignCount >= 2) {
+        throw new Error('You have reached the maximum of 2 campaigns this month. For more information or assistance, please contact us at juanbayan-support.ph.');
+    }
 
     const campaign = new db.Campaign({
         ...params,
@@ -34,6 +57,7 @@ async function create(params, campaignImage, proofFiles) {
     await campaign.save();
     return campaign;
 }
+
 
 
 async function update(id, params, campaignImage, proofFiles) {
@@ -261,4 +285,16 @@ async function getNotes(campaignId) {
 
     console.log('Fetched notes:', campaign.Campaign_Notes); // Debug log to verify data
     return campaign.Campaign_Notes;
+}
+
+async function getAllApproved() {
+    try {
+        const campaigns = await db.Campaign.findAll({
+            where: { Campaign_ApprovalStatus: 'Approved' }, // Filter for approved campaigns
+            include: [/* include any related models if necessary, e.g., Account */],
+        });
+        return campaigns;
+    } catch (error) {
+        throw error;
+    }
 }

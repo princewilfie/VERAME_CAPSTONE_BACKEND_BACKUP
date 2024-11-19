@@ -46,7 +46,7 @@ function model(sequelize) {
     };
 
     const options = {
-        timestamps: false
+        timestamps: true
     };
 
     const Campaign = sequelize.define('campaign', attributes, options);

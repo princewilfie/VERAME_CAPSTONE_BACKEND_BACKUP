@@ -106,6 +106,11 @@ async function register(params, origin) {
     // First registered account is an admin
     const isFirstAccount = (await db.Account.count()) === 0;
     account.acc_role = isFirstAccount ? Role.Admin : Role.User;
+
+    if(account.acc_role == 'Admin'){
+        account.acc_type = 'Admin';
+    }
+
     account.acc_verificationToken = randomTokenString();
 
     // Hash password
@@ -233,6 +238,10 @@ async function update(id, params, file) {
             params.acc_image = newImagePath;
         }
 
+        if(account.acc_role == 'Admin'){
+            account.acc_type = 'Admin';
+        }
+        
         // Validate email if it has changed
         const emailChanged = params.acc_email && account.acc_email !== params.acc_email;
         if (emailChanged && await db.Account.findOne({ where: { acc_email: params.acc_email } })) {
@@ -331,8 +340,8 @@ function sendPasswordResetEmail(account, origin) {
 }
 
 function basicDetails(account) {
-    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image } = account;
-    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image };
+    const { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image, acc_type } = account;
+    return { id, acc_email, acc_firstname, acc_lastname, acc_pnumber, acc_role, acc_created, acc_updated, acc_verified, acc_totalpoints, acc_status, acc_image, acc_type };
 }
 
 async function updatePoints(id, acc_totalpoints) {
@@ -428,8 +437,3 @@ async function getAccountActivities(acc_id) {
         throw error;
     }
 }
-
-
-
-
-

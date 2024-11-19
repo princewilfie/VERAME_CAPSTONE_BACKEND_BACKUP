@@ -33,7 +33,13 @@ function model(sequelize) {
             get() {
                 return this.account ? this.account.acc_email : null;
             }
-        }
+        },
+        acc_image: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.account ? this.account.acc_image : null;
+            }
+        } 
 
     };
 

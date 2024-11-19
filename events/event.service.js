@@ -121,7 +121,7 @@ async function getAll() {
             {
                 model: db.Account,
                 as: 'account',
-                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include these fields
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image'] // Include these fields
             }
         ]
     });
@@ -143,7 +143,7 @@ async function getById(id) {
             {
                 model: db.Account,
                 as: 'account',
-                attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Include these fields
+                attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image'] // Include these fields
             }
         ]
     });
@@ -163,7 +163,7 @@ async function getByAccountId(accountId) {
         include: [{
             model: db.Account,
             as: 'account',
-            attributes: ['acc_firstname', 'acc_lastname', 'acc_email'] // Add other fields as needed
+            attributes: ['acc_firstname', 'acc_lastname', 'acc_email', 'acc_image'] // Add other fields as needed
         }]
     });
     return events;

@@ -12,8 +12,15 @@ function model(sequelize) {
         acc_firstname: { type: DataTypes.STRING, allowNull: false },
         acc_lastname: { type: DataTypes.STRING, allowNull: false },
         acc_pnumber: { type: DataTypes.STRING, allowNull: true },
-        acc_image: { type: DataTypes.STRING, allowNull: true }, // Set default image path
-        acc_totalpoints: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // Add default value 0
+        acc_image: { type: DataTypes.STRING, allowNull: true },
+        acc_totalpoints: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 },
+        acc_type: { // New field
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                isIn: [['Donor', 'Beneficiary', 'Admin']],
+            }
+        },
         acc_acceptTerms: { type: DataTypes.BOOLEAN },
         acc_role: { type: DataTypes.STRING, allowNull: false },
         acc_verificationToken: { type: DataTypes.STRING },

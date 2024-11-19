@@ -12,10 +12,19 @@ router.put('/approve', authorize('Admin'), approveWithdrawal); // Changed to use
 // Route to reject a withdrawal (admin only)
 router.put('/reject', authorize('Admin'), rejectWithdrawal); // Changed to use body
 
-router.get('/all', authorize('Admin'), getAll); // Only admin can view all withdrawals
+router.get('/all', getAll);
 
 router.put('/submit-testimony', authorize(), submitTestimony);
 
+router.get('/campaign/:campaignId', authorize(), async (req, res, next) => {
+    try {
+        const campaignId = req.params.campaignId;
+        const withdrawals = await withdrawService.getWithdrawByCampaignId(campaignId);
+        res.json(withdrawals);
+    } catch (error) {
+        next(error);
+    }
+}); 
 
 // Function to request a withdrawal
 function requestWithdrawal(req, res, next) {

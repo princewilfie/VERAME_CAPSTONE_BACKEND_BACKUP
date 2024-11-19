@@ -20,6 +20,8 @@ router.post('/', multer.fields([
     createSchema(req, res, next);
 }, create);
 
+router.get('/approved', getAllApproved); 
+
 // Get all approved campaigns
 router.get('/', getAll);
 
@@ -49,6 +51,7 @@ router.delete('/:id', _delete);
 
 router.get('/:id/proofs', authorize('Admin'), getProofFiles);
 router.get('/:id/notes', authorize('Admin'), getNotes);
+
 
 router.post('/:id/donate', async (req, res, next) => {
     const { amount } = req.body;
@@ -181,5 +184,11 @@ function getProofFiles(req, res, next) {
 function getNotes(req, res, next) {
     campaignService.getNotes(req.params.id)
         .then(notes => res.json({ notes }))
+        .catch(next);
+}
+
+function getAllApproved(req, res, next) {
+    campaignService.getAllApproved()  // Changed from getAll to getAllApproved
+        .then(campaigns => res.json(campaigns))
         .catch(next);
 }
