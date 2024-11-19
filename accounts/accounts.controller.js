@@ -17,9 +17,12 @@ router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
 router.post('/reset-password', resetPasswordSchema, resetPassword);
 router.get('/', /*authorize(Role.Admin),*/ getAll);
+router.get('/beneficiaries', authorize(Role.Admin), getAllBeneficiary);
+router.get('/donors', authorize(Role.Admin), getAllDonor);
 router.get('/:id', authorize(), getById);
 router.post('/', authorize(Role.Admin), createSchema, create);
 router.put('/:id/points', authorize(), updatePointsSchema, updatePoints);
+
 
 
 router.put('/:id', multer.single('acc_image'), (req, res, next) => {
@@ -298,6 +301,30 @@ function updatePointsSchema(req, res, next) {
 function updatePoints(req, res, next) {
     accountService.updatePoints(req.params.id, req.body.acc_totalpoints)
         .then(() => res.json({ message: 'Points updated successfully' }))
+        .catch(next);
+}
+
+function getAllBeneficiary(req, res, next) {
+    accountService.getAllBeneficiary()
+        .then(beneficiaries => {
+            res.json({
+                success: true,
+                message: 'Beneficiaries retrieved successfully',
+                data: beneficiaries
+            });
+        })
+        .catch(next);
+}
+
+function getAllDonor(req, res, next) {
+    accountService.getAllDonor()
+        .then(donors => {
+            res.json({
+                success: true,
+                message: 'Donors retrieved successfully',
+                data: donors
+            });
+        })
         .catch(next);
 }
 

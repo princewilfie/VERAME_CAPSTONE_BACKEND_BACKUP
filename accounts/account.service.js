@@ -24,7 +24,9 @@ module.exports = {
     update,
     updatePoints,
     delete: _delete,
-    getAccountActivities 
+    getAccountActivities,
+    getAllBeneficiary,
+    getAllDonor
 
 
 };
@@ -437,3 +439,19 @@ async function getAccountActivities(acc_id) {
         throw error;
     }
 }
+
+
+async function getAllBeneficiary() {
+    return db.Account.findAll({
+        where: { acc_type: 'Beneficiary' },
+        attributes: ['id', 'acc_firstname', 'acc_lastname', 'acc_email', 'acc_pnumber', 'acc_image']
+    });
+}
+
+async function getAllDonor() {
+    return db.Account.findAll({
+        where: { acc_type: 'Donor' },
+        attributes: ['id', 'acc_firstname', 'acc_lastname', 'acc_email', 'acc_pnumber', 'acc_image']
+    });
+}
+
