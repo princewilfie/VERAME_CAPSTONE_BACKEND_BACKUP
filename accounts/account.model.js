@@ -37,9 +37,32 @@ function model(sequelize) {
             get() {
                 return this.acc_emailVerified && this.acc_manualVerificationStatus === 'approved';
             }
+        },
+
+        campaign_name: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.campaigns ? this.campaigns.Campaign_Name : null;
+            }
+        },
+
+        campaign_currentraised: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.campaigns ? this.campaigns.Campaign_CurrentRaised : null;
+            }
+        },
+
+        donation_amount: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                return this.donations ? this.donations.donation_amount : null;
+            }
         }
+
     };
 
+    
     const options = {
         timestamps: false,
         defaultScope: {
@@ -50,7 +73,15 @@ function model(sequelize) {
         }
     };
 
-    return sequelize.define('account', attributes, options);
+    const Account = sequelize.define('account', attributes, options);
+
+    // Associations (define the relationships)
+    Account.associate = (models) => {
+        Account.hasMany(models.Campaign, { foreignKey: 'acc_id', as: 'Campaigns' });
+        Account.hasMany(models.Donation, { foreignKey: 'acc_id', as: 'Donations' });
+    };
+
+    return Account;
 }
 
 module.exports = model;

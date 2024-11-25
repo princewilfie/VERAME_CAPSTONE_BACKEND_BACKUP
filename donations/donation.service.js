@@ -224,7 +224,7 @@ async function handlePaymentSuccess(paymentData) {
                     <p>Your contribution makes a difference. We appreciate your support!</p>
                     
                     <hr style="border: none; border-top: 1px solid #ccc;">
-                    <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:support@yourplatform.com">support@yourplatform.com</a>.</p>
+                    <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:juanbayan.ph@gmail.com">juanbayan.ph@gmail.com</a>.</p>
                     <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
                 </div>
             `

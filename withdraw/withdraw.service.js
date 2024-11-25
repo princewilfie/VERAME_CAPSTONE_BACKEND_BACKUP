@@ -29,8 +29,11 @@ async function requestWithdrawal(Campaign_ID, acc_id, Acc_number, Bank_account) 
         Acc_number,  // Set Acc_number from the passed argument
         Bank_account,  // Set Bank_account from the passed argument
         Withdraw_Amount: campaign.Campaign_CurrentRaised,
-        Status: 'Pending'
+        Status: 'Pending',
     });
+
+    campaign.Withdrawal_Status = 'Pending';
+    await campaign.save();
 
     await withdrawal.save();
     return withdrawal;
@@ -59,6 +62,10 @@ async function approveWithdrawal(id) {
     campaign.Campaign_ApprovalStatus = 'Done';
 
     campaign.Campaign_Status = 3; // Set campaign status to "Done"
+
+
+    campaign.Withdrawal_Status = 'Done';
+
     await campaign.save();
 
     // Fetch the user's account to get email information
@@ -109,11 +116,58 @@ async function rejectWithdrawal(id) {
     const withdrawal = await db.Withdraw.findByPk(id);
     if (!withdrawal) throw 'Withdrawal request not found';
 
+    // Fetch the campaign details
+    const campaign = await db.Campaign.findByPk(withdrawal.Campaign_ID);
+    if (!campaign) throw 'Campaign not found';
+
+    // Update withdrawal and campaign status to Rejected
     withdrawal.Status = 'Rejected';
     await withdrawal.save();
 
+    campaign.Withdrawal_Status = 'Rejected'; // Set campaign's withdrawal status to Rejected
+    await campaign.save();
+
+    // Fetch the user's account to get email information
+    const account = await db.Account.findByPk(withdrawal.acc_id);
+    if (!account) throw 'Account not found';
+
+    // Prepare email options
+    const emailOptions = {
+        to: account.acc_email,
+        subject: 'Your Withdrawal Request for Campaign: Rejected',
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+                <h2 style="color: #e74c3c;">Withdrawal Request Rejected</h2>
+                <p>Dear ${account.acc_firstname} ${account.acc_lastname},</p>
+                <p>We regret to inform you that your withdrawal request for the campaign <strong>${campaign.Campaign_Name}</strong> has been <strong>rejected</strong>.</p>
+                
+                <h4 style="color: #e74c3c;">Reason for Rejection:</h4>
+                <p>Please contact our support team at <a href="mailto:juanbayan.ph@gmail.com">juanbayan.ph@gmail.com</a> for further details.</p>
+                
+                <h4 style="color: #5b9bd5;">Campaign Details:</h4>
+                <ul style="line-height: 1.6;">
+                    <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
+                    <li><strong>Description:</strong> ${campaign.Campaign_Description}</li>
+                    <li><strong>Requested Amount:</strong> ${withdrawal.Withdraw_Amount.toLocaleString()} ${withdrawal.currency || 'PHP'}</li>
+                    <li><strong>Bank Account:</strong> ${withdrawal.Bank_account}</li>
+                </ul>
+                
+                <p style="margin-top: 30px;">We apologize for any inconvenience caused and appreciate your understanding.</p>
+                
+                <hr style="border: none; border-top: 1px solid #ccc;">
+                <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:juanbayan.ph@gmail.com">juanbayan.ph@gmail.com</a>.</p>
+                <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
+            </div>
+        `
+    };
+
+    // Send email notification
+    await sendEmail(emailOptions);
+
     return withdrawal;
 }
+
+
 
 // Get all withdrawal requests with associated account and campaign details
 async function getAll() {

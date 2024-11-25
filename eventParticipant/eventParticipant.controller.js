@@ -11,10 +11,22 @@ router.get('/account/:accId/joined', getJoinedEvents);
 // Route to get all participants for an event
 router.get('/event/:eventId/participants', getEventParticipants);
 router.get('/participants', getAll);
+router.patch('/participant/:participantId/attendance', markAttendance);
+
 
 module.exports = router;
 
-// Controller functions
+
+function markAttendance(req, res, next) {
+    const participantId = req.params.participantId;
+    const { attendance } = req.body; // true or false
+
+    eventParticipantService.markAttendance(participantId, attendance)
+        .then(response => res.json(response))
+        .catch(next);
+}
+
+
 
 function joinEvent(req, res, next) {
     const { Acc_ID, Event_ID } = req.body;

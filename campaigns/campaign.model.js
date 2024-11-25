@@ -17,6 +17,12 @@ function model(sequelize) {
         Campaign_Notes: { type: DataTypes.STRING, allowNull: true},
         Admin_Notes: { type: DataTypes.STRING, allowNull: true }, 
 
+        Withdrawal_Status: { 
+            type: DataTypes.STRING, 
+            allowNull: false, 
+            defaultValue: 'Not Requested' 
+        },
+
         // Virtual fields for account information
         acc_firstname: {
             type: DataTypes.VIRTUAL,

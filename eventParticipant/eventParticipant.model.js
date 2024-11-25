@@ -6,6 +6,8 @@ function model(sequelize) {
         Acc_ID: { type: DataTypes.INTEGER, allowNull: false },
         Event_ID: { type: DataTypes.INTEGER, allowNull: false },
         joinedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+        Participant_Attendance: { type: DataTypes.BOOLEAN, defaultValue: false },
+
 
         // Virtual fields to fetch associated account data
         acc_firstname: {

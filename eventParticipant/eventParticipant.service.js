@@ -4,8 +4,12 @@ module.exports = {
     joinEvent,
     getJoinedEvents,
     getAllParticipants,
-    getAll
+    getAll,
+    markAttendance
 };
+
+
+
 
 async function joinEvent(accId, eventId) {
     const event = await db.Event.findByPk(eventId);
@@ -21,6 +25,34 @@ async function joinEvent(accId, eventId) {
         joinedAt: participant.joinedAt
     };
 }
+
+async function markAttendance(participantId, attendance) {
+    // Find the participant record
+    const participant = await db.EventParticipant.findByPk(participantId);
+    if (!participant) throw 'Participant not found';
+
+    // Update the Participant_Attendance field
+    participant.Participant_Attendance = attendance;
+    await participant.save();
+
+    // If the participant is marked as present, award points
+    if (attendance) {
+        // Find the associated account
+        const account = await db.Account.findByPk(participant.Acc_ID);
+        if (!account) throw 'Account not found';
+
+        // Add points to the account (e.g., +10 points)
+        account.acc_totalpoints += 2; // Adjust the point value as needed
+        await account.save();
+    }
+
+    return {
+        message: 'Attendance and points updated successfully',
+        participant,
+    };
+}
+
+
 
 async function getJoinedEvents(accId) {
     const participants = await db.EventParticipant.findAll({ 

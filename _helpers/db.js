@@ -29,7 +29,7 @@ async function initialize() {
     
     //campaign
     db.Campaign = require('../campaigns/campaign.model')(sequelize);
-    db.Account.hasMany(db.Campaign, { onDelete: 'CASCADE' });
+    db.Account.hasMany(db.Campaign, { foreignKey: 'Acc_ID', as: 'Campaigns' });
     db.Campaign.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
 
     //event
@@ -43,8 +43,11 @@ async function initialize() {
 
     //donation
     db.Donation = require('../donations/donation.model')(sequelize); 
-    db.Account.hasMany(db.Donation, { onDelete: 'CASCADE' }); 
-    db.Campaign.hasMany(db.Donation, { onDelete: 'CASCADE' });
+
+    db.Account.hasMany(db.Donation, { foreignKey: 'acc_id', as: 'Donations', onDelete: 'CASCADE' });
+    db.Campaign.hasMany(db.Donation, { foreignKey: 'campaign_id', as: 'Donations', onDelete: 'CASCADE' });
+
+
     db.Donation.belongsTo(db.Account, { foreignKey: 'acc_id', as: 'account' }); 
     db.Donation.belongsTo(db.Campaign, { foreignKey: 'campaign_id', as: 'campaign' }); 
 
@@ -68,14 +71,12 @@ async function initialize() {
     // EventParticipant model
     db.EventParticipant = require('../eventParticipant/eventParticipant.model')(sequelize);
 
-    // Define relationships
-    db.Event.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // An event can have many participants
-    db.EventParticipant.belongsTo(db.Event, {foreignKey: 'Event_ID', as: 'event'});  // A participant belongs to an event
+    db.Event.hasMany(db.EventParticipant, { foreignKey: 'Event_ID', onDelete: 'CASCADE' });
+    db.EventParticipant.belongsTo(db.Event, { foreignKey: 'Event_ID', as: 'event' });
     
-
-    db.Account.hasMany(db.EventParticipant, { onDelete: 'CASCADE' });  // A user can join many events
+    db.Account.hasMany(db.EventParticipant, { foreignKey: 'Acc_ID', onDelete: 'CASCADE' });
     db.EventParticipant.belongsTo(db.Account, { foreignKey: 'Acc_ID', as: 'account' });
-
+    
 
     // Withdraw model
     db.Withdraw = require('../withdraw/withdraw.model')(sequelize);

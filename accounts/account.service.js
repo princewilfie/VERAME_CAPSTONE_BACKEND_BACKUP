@@ -442,16 +442,55 @@ async function getAccountActivities(acc_id) {
 
 
 async function getAllBeneficiary() {
-    return db.Account.findAll({
-        where: { acc_type: 'Beneficiary' },
-        attributes: ['id', 'acc_firstname', 'acc_lastname', 'acc_email', 'acc_pnumber', 'acc_image']
+    const beneficiaries = await db.Account.findAll({
+        where: { acc_type: 'Beneficiary' }, // Fetch only accounts of type 'Beneficiary'
+        attributes: ['id', 'acc_firstname', 'acc_lastname', 'acc_email', 'acc_pnumber', 'acc_image'],
+        include: [
+            {
+                model: db.Campaign,
+                as: 'Campaigns', // Use the alias defined in your relationship
+                attributes: ['Campaign_Name', 'Campaign_CurrentRaised'], // Include campaign name and current raised amount
+            },
+        ],
     });
+
+    // Transform data if needed
+    return beneficiaries.map(beneficiary => ({
+        ...beneficiary.toJSON(),
+        campaign_name: beneficiary.Campaigns?.[0]?.Campaign_Name || null,
+        campaign_currentraised: beneficiary.Campaigns?.[0]?.Campaign_CurrentRaised || 0,
+    }));
 }
 
 async function getAllDonor() {
-    return db.Account.findAll({
-        where: { acc_type: 'Donor' },
-        attributes: ['id', 'acc_firstname', 'acc_lastname', 'acc_email', 'acc_pnumber', 'acc_image']
+    const donors = await db.Account.findAll({
+        where: { acc_type: 'Donor' }, // Fetch only accounts of type 'Donor'
+        attributes: ['id', 'acc_email', 'acc_firstname', 'acc_lastname', 'acc_pnumber', 'acc_image', 'acc_totalpoints'],
+        include: [
+            {
+                model: db.Donation,
+                as: 'Donations',
+                attributes: ['donation_amount', 'campaign_id'], // Include donation amount and campaign ID
+                include: [
+                    {
+                        model: db.Campaign,
+                        as: 'campaign', // Use the alias defined in your relationship
+                        attributes: ['Campaign_Name'], // Include only the name of the campaign
+                    },
+                ],
+            },
+        ],
+    });
+
+    // Transform data if needed
+    return donors.map(donor => {
+        const donations = donor.Donations || [];
+        return {
+            ...donor.toJSON(),
+            donation_amount: donations.reduce((sum, d) => sum + (d.donation_amount || 0), 0), // Aggregate donation amount
+            campaign_name: donations?.[0]?.campaign?.Campaign_Name || null, // Take the first campaign name (if needed)
+        };
     });
 }
+
 

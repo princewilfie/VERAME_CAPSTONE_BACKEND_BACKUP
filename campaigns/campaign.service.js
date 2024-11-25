@@ -22,31 +22,18 @@ module.exports = {
 
 
 async function create(params, campaignImage, proofFiles) {
+    // Check monthly limit first
+    const underLimit = await checkMonthlyLimit(params.Acc_ID);
+    if (!underLimit) {
+        throw new Error('You have reached the maximum of 2 campaigns this month. For more information or assistance, please contact us at juanbayan-support.ph.');
+    }
+
+    // Process image paths
     const defaultImagePath = path.basename('default-profile.png');
     const imagePath = campaignImage ? path.basename(campaignImage.path) : defaultImagePath;
     const proofImagePaths = proofFiles ? proofFiles.map(file => path.basename(file.path)) : [];
 
-    const accId = params.Acc_ID;
-
-    // Get the start and end of the current month
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
-
-    // Count all campaigns for the user this month
-    const campaignCount = await db.Campaign.count({
-        where: {
-            Acc_ID: accId,
-            createdAt: {
-                [Op.between]: [startOfMonth, endOfMonth],
-            }
-        }
-    });
-
-    // Check if the limit of 3 campaigns has been reached
-    if (campaignCount >= 2) {
-        throw new Error('You have reached the maximum of 2 campaigns this month. For more information or assistance, please contact us at juanbayan-support.ph.');
-    }
-
+    // Create and save campaign
     const campaign = new db.Campaign({
         ...params,
         Campaign_Image: imagePath,
@@ -56,6 +43,28 @@ async function create(params, campaignImage, proofFiles) {
 
     await campaign.save();
     return campaign;
+}
+
+async function checkMonthlyLimit(accountId) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const endOfMonth = new Date();
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    const campaignCount = await db.Campaign.count({
+        where: {
+            Acc_ID: accountId,
+            createdAt: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+
+    return campaignCount < 2;
 }
 
 
