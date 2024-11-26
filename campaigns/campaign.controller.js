@@ -112,10 +112,19 @@ function create(req, res, next) {
         ? (Array.isArray(req.files.Proof_Files) ? req.files.Proof_Files : [req.files.Proof_Files])
         : [];
 
+    const campaignEndDate = new Date(req.body.Campaign_End);
+    const currentDate = new Date();
+
+    // Check if the campaign end date is before the current date
+    if (currentDate > campaignEndDate) {
+        return res.status(400).json({ message: 'Campaign end date has passed. Cannot create campaign.' });
+    }
+
     campaignService.create(req.body, campaignImage, proofFiles)
         .then(campaign => res.json(campaign))
         .catch(next);
 }
+
 
 
 function getAll(req, res, next) {
@@ -159,6 +168,14 @@ function update(req, res, next) {
         ? (Array.isArray(req.files.Proof_Files) ? req.files.Proof_Files.map(file => file.path) : [req.files.Proof_Files.path])
         : [];
 
+    const campaignEndDate = new Date(req.body.Campaign_End);
+    const currentDate = new Date();
+
+    // Check if the campaign end date is before the current date
+    if (currentDate > campaignEndDate) {
+        return res.status(400).json({ message: 'Campaign end date has passed. Cannot update campaign.' });
+    }
+
     // Automatically set status and approval fields
     req.body.Campaign_Status = 0;  // Set to 'Pending'
     req.body.Campaign_ApprovalStatus = 'Waiting For Approval';
@@ -167,6 +184,7 @@ function update(req, res, next) {
         .then(campaign => res.json(campaign))
         .catch(next);
 }
+
 
 
 function _delete(req, res, next) {
