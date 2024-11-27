@@ -160,6 +160,7 @@ async function createGcashPayment(paymentData) {
 }
 
 // Handle payment success
+// Handle payment success
 async function handlePaymentSuccess(paymentData) {
     try {
         const { accId, campaignId, amount } = paymentData;
@@ -200,7 +201,82 @@ async function handlePaymentSuccess(paymentData) {
 
         console.log(`Account ${account.acc_email} earned ${pointsEarned} points.`);
 
-        // Send a donation receipt email
+        // Flag donation if amount >= 500,000 PHP
+        if (amount >= 500000) {
+            // Send an email to both the donor and ICC (juanbayan.ph@gmail.com) if the donation is large
+            const adminEmailOptions = {
+                to: 'juanbayan.ph@gmail.com',
+                subject: `High Donation Alert: ${campaign.Campaign_Name}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; color: #333;">
+                        <h2 style="color: #ff6347;">High Donation Alert</h2>
+                        <p>Dear JuanBayan Admin,</p>
+                        <p>A large donation of <strong>${amount.toLocaleString()} PHP</strong> has been made to the campaign <strong>${campaign.Campaign_Name}</strong>.</p>
+                        <h4 style="color: #5b9bd5;">Donation Details:</h4>
+                        <ul style="line-height: 1.6;">
+                            <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
+                            <li><strong>Amount Donated:</strong> ${amount.toLocaleString()} PHP</li>
+                            <li><strong>Fee Percentage:</strong> ${(feePercentage * 100).toFixed(1)}%</li>
+                            <li><strong>Amount Credited to Campaign:</strong> ${amountAfterFee.toLocaleString()} PHP</li>
+                            <li><strong>Points Earned:</strong> ${pointsEarned}</li>
+                            <li><strong>Donation Date:</strong> ${donationDate}</li>
+                        </ul>
+                        <p>This donation has been flagged due to the high amount.</p>
+                        <hr style="border: none; border-top: 1px solid #ccc;">
+                        <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
+                    </div>
+                `
+            };
+
+            // Send the alert email to the ICC (juanbayan.ph@gmail.com)
+            await sendEmail(adminEmailOptions);
+
+            // Send the email to the donor
+            const donorEmailOptions = {
+                to: account.acc_email,
+                subject: `Donation Flagged for Campaign: ${campaign.Campaign_Name}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; color: #333;">
+                        <h2 style="color: #ff6347;">Donation Flagged</h2>
+                        <p>Dear ${account.acc_firstname} ${account.acc_lastname},</p>
+                        <p>We would like to inform you that your donation of <strong>${amount.toLocaleString()} PHP</strong> to the campaign <strong>${campaign.Campaign_Name}</strong> has been flagged due to the large amount donated.</p>
+                        
+                        <p>This action is in compliance with the Anti-Money Laundering Act (AMLA) of the Philippines, which requires organizations to perform additional verification for large transactions.</p>
+            
+                        <h4 style="color: #5b9bd5;">Donation Details:</h4>
+                        <ul style="line-height: 1.6;">
+                            <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
+                            <li><strong>Description:</strong> ${campaign.Campaign_Description}</li>
+                            <li><strong>Amount Donated:</strong> ${amount.toLocaleString()} PHP</li>
+                            <li><strong>Fee Percentage:</strong> ${(feePercentage * 100).toFixed(1)}%</li>
+                            <li><strong>Amount Credited to Campaign:</strong> ${amountAfterFee.toLocaleString()} PHP</li>
+                            <li><strong>Points Earned:</strong> ${pointsEarned}</li>
+                            <li><strong>Donation Date:</strong> ${donationDate}</li>
+                        </ul>
+                        
+                        <p>As part of the AMLA compliance, we kindly request that you submit valid identification (IDs) for verification. Please attach the following documents and send them to the email address below:</p>
+                        <ul style="line-height: 1.6;">
+                            <li>Valid Government-issued ID (e.g., Passport, Driver's License, SSS ID, or other official ID)</li>
+                            <li>Proof of Billing (e.g., utility bill or bank statement, if applicable)</li>
+                        </ul>
+                        <p>Please email the documents to <a href="mailto:juanbayan.support@gmail.com">juanbayan.support@gmail.com</a>.</p>
+
+            
+                        <p>Your donation has been flagged for further review while we process these requirements. We appreciate your understanding and cooperation.</p>
+            
+                        <p>If you have any questions or need assistance, please don't hesitate to contact us at <a href="mailto:juanbayan.ph@gmail.com">juanbayan.ph@gmail.com</a>.</p>
+            
+                        <hr style="border: none; border-top: 1px solid #ccc;">
+                        <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
+                    </div>
+                `
+            };
+
+            // Send the donation receipt email to the donor
+            await sendEmail(donorEmailOptions);
+        }
+
+        // Send the donation receipt email to the donor (in case donation is below 500,000 PHP)
         const emailOptions = {
             to: account.acc_email,
             subject: `Donation Receipt for Campaign: ${campaign.Campaign_Name}`,
@@ -209,7 +285,6 @@ async function handlePaymentSuccess(paymentData) {
                     <h2 style="color: #5b9bd5;">Donation Receipt</h2>
                     <p>Dear ${account.acc_firstname} ${account.acc_lastname},</p>
                     <p>Thank you for your generous donation of <strong>${amount.toLocaleString()} PHP</strong> to the campaign <strong>${campaign.Campaign_Name}</strong>.</p>
-                    
                     <h4 style="color: #5b9bd5;">Donation Details:</h4>
                     <ul style="line-height: 1.6;">
                         <li><strong>Campaign Name:</strong> ${campaign.Campaign_Name}</li>
@@ -220,9 +295,7 @@ async function handlePaymentSuccess(paymentData) {
                         <li><strong>Points Earned:</strong> ${pointsEarned}</li>
                         <li><strong>Donation Date:</strong> ${donationDate}</li>
                     </ul>
-                    
                     <p>Your contribution makes a difference. We appreciate your support!</p>
-                    
                     <hr style="border: none; border-top: 1px solid #ccc;">
                     <p style="font-size: 12px; color: #888;">If you have any questions, feel free to contact us at <a href="mailto:juanbayan.ph@gmail.com">juanbayan.ph@gmail.com</a>.</p>
                     <p style="font-size: 12px; color: #888;">JuanBayan, 123 Main Street, City, Philippines</p>
@@ -230,11 +303,11 @@ async function handlePaymentSuccess(paymentData) {
             `
         };
 
-        // Send the email notification
+        // Send the donation receipt email to the donor
         await sendEmail(emailOptions);
 
         return {
-            message: 'Donation confirmed, campaign updated, and points added successfully',
+            message: 'Donation confirmed, campaign updated, points added successfully, and flagged for high donation',
             donation,
             pointsEarned
         };
@@ -243,6 +316,8 @@ async function handlePaymentSuccess(paymentData) {
         throw new Error('Error confirming donation or updating campaign: ' + error.message);
     }
 }
+
+
 
 // Fetch donations by campaign ID with account and campaign details
 async function getByCampaignId(campaignId) {
@@ -276,16 +351,31 @@ async function getByCampaignId(campaignId) {
 async function getFeeAmounts() {
     try {
         const feeAmounts = await db.Donation.findAll({
-            attributes: ['donation_id', 'fee_amount']
+            attributes: ['donation_id', 'fee_amount', 'donation_date'], // Select donation_id and fee_amount
+            include: [
+                {
+                    model: db.Campaign, // Include the Campaign model
+                    as: 'campaign', // Specify the alias used in the association
+                    attributes: ['Campaign_Name'], // Select the Campaign_Name from the Campaign model
+                }
+            ]
         });
 
+        // Calculate the total fee amount
         const totalFeeAmount = feeAmounts.reduce((total, { fee_amount }) => total + fee_amount, 0);
 
+        // Map the fee amounts to include Campaign_Name and donation_date
         return {
             totalFeeAmount,
-            feeAmounts: feeAmounts.map(({ donation_id, fee_amount }) => ({ donation_id, fee_amount }))
+            feeAmounts: feeAmounts.map(({ donation_id, fee_amount, campaign, donation_date }) => ({
+                donation_id,
+                fee_amount,
+                Campaign_Name: campaign.Campaign_Name, // Fetch from the included Campaign model
+                donation_date
+            }))
         };
     } catch (error) {
         throw error;
     }
 }
+
