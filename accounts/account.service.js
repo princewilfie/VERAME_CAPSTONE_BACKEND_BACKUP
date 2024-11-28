@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const sendEmail = require('_helpers/send-email');
 const path = require('path');
+const { Sequelize, Op } = require('sequelize'); // Destructure Sequelize and Op from sequelize
 
 
 
@@ -26,7 +27,8 @@ module.exports = {
     delete: _delete,
     getAccountActivities,
     getAllBeneficiary,
-    getAllDonor
+    getAllDonor,
+    getBeneficiaryDonationsByName
 
 
 };
@@ -493,4 +495,82 @@ async function getAllDonor() {
     });
 }
 
+
+
+
+async function getBeneficiaryDonationsByName(firstName, lastName) {
+    try {
+        const lowerFirstName = firstName.toLowerCase();
+        const lowerLastName = lastName.toLowerCase();
+
+        // Ensure you're using Sequelize.fn correctly
+        const beneficiary = await db.Account.findOne({
+            where: {
+                [Op.and]: [
+                    Sequelize.where(
+                        Sequelize.fn('LOWER', Sequelize.col('acc_firstname')),
+                        'LIKE',
+                        `%${lowerFirstName}%`
+                    ),
+                    Sequelize.where(
+                        Sequelize.fn('LOWER', Sequelize.col('acc_lastname')),
+                        'LIKE',
+                        `%${lowerLastName}%`
+                    ),
+                    { acc_type: 'Beneficiary' }
+                ]
+            }
+        });
+
+        if (!beneficiary) {
+            throw new Error('Beneficiary not found');
+        }
+
+        const campaigns = await db.Campaign.findAll({
+            where: { acc_id: beneficiary.id },
+            include: [
+                {
+                    model: db.Donation,
+                    as: 'Donations',
+                    include: [
+                        {
+                            model: db.Account,
+                            as: 'account',
+                            attributes: ['acc_firstname', 'acc_lastname']
+                        }
+                    ]
+                }
+            ]
+        });
+
+        const allDonations = campaigns.flatMap(campaign => 
+            campaign.Donations.map(donation => ({
+                campaignName: campaign.Campaign_Name,
+                campaignDescription: campaign.Campaign_Description,
+                donationAmount: donation.donation_amount,
+                donationDate: donation.donation_date,
+                donorFirstName: donation.account.acc_firstname,
+                donorLastName: donation.account.acc_lastname
+            }))
+        );
+
+        return {
+            beneficiary: {
+                id: beneficiary.id,
+                firstName: beneficiary.acc_firstname,
+                lastName: beneficiary.acc_lastname
+            },
+            campaigns: campaigns.map(campaign => ({
+                id: campaign.Campaign_ID,
+                name: campaign.Campaign_Name,
+                description: campaign.Campaign_Description,
+                currentRaised: campaign.Campaign_CurrentRaised
+            })),
+            donations: allDonations
+        };
+    } catch (error) {
+        console.error('Error fetching beneficiary donations:', error);
+        throw error;
+    }
+}
 

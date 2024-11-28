@@ -16,6 +16,7 @@ router.post('/verify-email', verifyEmailSchema, verifyEmail);
 router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
 router.post('/reset-password', resetPasswordSchema, resetPassword);
+router.post('/beneficiary-donations', authorize(), getBeneficiaryDonations);
 router.get('/', /*authorize(Role.Admin),*/ getAll);
 router.get('/beneficiaries', authorize(Role.Admin), getAllBeneficiary);
 router.get('/donors', authorize(Role.Admin), getAllDonor);
@@ -347,4 +348,25 @@ async function getAccountActivitiesController(req, res, next) {
             error: error.message
         });
     }
+}
+
+function getBeneficiaryDonations(req, res, next) {
+    const { firstName, lastName } = req.body; // Changed to req.body
+
+    if (!firstName || !lastName) {
+        return res.status(400).json({
+            success: false,
+            message: 'First name and last name are required'
+        });
+    }
+
+    accountService.getBeneficiaryDonationsByName(firstName, lastName)
+        .then(result => {
+            res.json({
+                success: true,
+                message: 'Donations retrieved successfully',
+                data: result
+            });
+        })
+        .catch(next);
 }
