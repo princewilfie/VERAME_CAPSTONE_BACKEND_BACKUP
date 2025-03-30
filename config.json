@@ -1,9 +1,9 @@
 {
     "database": {
-        "host": "mainline.proxy.rlwy.net",
-        "port": "36917",
+        "host": "nozomi.proxy.rlwy.net",
+        "port": "45015",
         "user": "root",
-        "password": "ZKHJhwQzzHPwHzwDirFEXskvaccNudiz",
+        "password": "bnasMOUYHWsCMoZHTZHYWybqvrXYSgsW",
         "database": "railway"
     },
     "secret": "6c32701b-3329-431e-b95f-5604da73e4fc",
