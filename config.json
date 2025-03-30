@@ -1,7 +1,7 @@
 {
     "database": {
-        "host": "nozomi.proxy.rlwy.net",
-        "port": "45015",
+        "host": "mysql.railway.internal",
+        "port": "3306",
         "user": "root",
         "password": "bnasMOUYHWsCMoZHTZHYWybqvrXYSgsW",
         "database": "railway"
