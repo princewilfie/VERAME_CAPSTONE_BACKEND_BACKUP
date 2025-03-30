@@ -1,22 +1,26 @@
-const config = require('config.json');
-const mysql = require('mysql2/promise');
-const {Sequelize, Op} = require('sequelize');
+require('dotenv').config(); // Load environment variables
 
+const { Sequelize, Op } = require('sequelize');
 
-module.exports = db = {};
+const db = {};
 
-initialize();
+// Load environment variables
+const { DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME } = process.env;
 
+if (!DB_HOST || !DB_PORT || !DB_USER || !DB_PASS || !DB_NAME) {
+    console.error("Missing database environment variables!");
+    process.exit(1);
+}
 
-async function initialize() {
+// Initialize Sequelize
+const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
+    host: DB_HOST,
+    port: DB_PORT,
+    dialect: 'mysql',
+    logging: false
+});
 
-    const { host, port, user, password, database} = config.database;
-    const connection = await mysql.createConnection({host, port, user, password});
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
-
-    const sequelize = new Sequelize(database, user, password, { 
-        host, port, dialect: 'mysql'});
-        db.Op = Op;  
+db.Op = Op;
 
 
     //accounts
@@ -139,6 +143,16 @@ async function initialize() {
 
 
 
+// Sync database
+(async () => {
+    try {
+        await sequelize.sync();
+        console.log("Database synchronized successfully.");
+    } catch (err) {
+        console.error("Database synchronization failed:", err);
+    }
+})();
 
-    await sequelize.sync();
-}
+db.sequelize = sequelize;
+
+module.exports = db;
